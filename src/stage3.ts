@@ -1,144 +1,174 @@
-import { engine, Entity, GltfContainer, Transform, Material, MeshRenderer, MeshCollider, ColliderLayer, TriggerArea, triggerAreaEventsSystem, InputModifier, VideoPlayer, Animator, pointerEventsSystem, InputAction, LightSource, Billboard, BillboardMode, AudioSource } from "@dcl/sdk/ecs";
-import { Vector3, Quaternion, Color3, Color4 } from "@dcl/sdk/math";
-import { movePlayerTo, triggerSceneEmote } from "~system/RestrictedActions";
+import { engine, Entity, GltfContainer, Transform, ColliderLayer, triggerAreaEventsSystem, TriggerArea, Animator, LightSource, Material, MeshRenderer, AudioSource } from "@dcl/sdk/ecs";
+import { Vector3, Quaternion, Color4 } from "@dcl/sdk/math";
+import { movePlayerTo } from "~system/RestrictedActions";
 import * as utils from '@dcl-sdk/utils'
-import { SetStage1Scene } from "./stage";
-import { angry } from "./utils";
-import { showEndScreen } from './ui';
-import { spawn } from "~system/PortableExperiences";
+import {  portalLight, expandFog } from "./landscape";
+import { fadeTransition } from "./ui";
+import { heart, creaky, whisper, dungeon } from "./utils";
 
-
-let skullPile: Entity | null = engine.addEntity()
-let dozey: Entity| null = engine.addEntity()
+// Global references
+let spiral2: Entity | null = null
 let skeletons: Entity[] = []
-let candles: Entity[] = []
-let sign: Entity | null = null
+let bottomLight: Entity | null = null
+
+
 export function createStage3Scene() {
-    console.log("Creating stage3 scene...")
-    // Create skull pile using the GLB model
+    addSounds()
+    console.log("Creating stage3 scene with spiral2 and fire walls...")
     
-    GltfContainer.createOrReplace(skullPile!, {
-        src: 'models/pileskulls.glb'
+    // Expand fog to be much larger for stage3
+    expandFog()
+    
+    // Create the spiral2 model
+    spiral2 = engine.addEntity()
+    GltfContainer.createOrReplace(spiral2, {
+        src: 'models/spiral4.glb',
+        visibleMeshesCollisionMask: ColliderLayer.CL_PHYSICS,
+        invisibleMeshesCollisionMask: ColliderLayer.CL_NONE
     })
     
-    Transform.createOrReplace(skullPile!, {
-        position: Vector3.create(0, .5, 0), // Center of the scene
-        scale: Vector3.create(2, 2, 2), // Scale as needed
+    Transform.createOrReplace(spiral2, {
+        position: Vector3.create(0, 22, 0),
+        scale: Vector3.create(22, 22, 22), // Scale as requested
         rotation: Quaternion.fromEulerDegrees(0, 0, 0)
     })
-
-
-    // Add sign.glb between candle and dozey
-    const sign = engine.addEntity()
-    GltfContainer.createOrReplace(sign, {
-        src: 'models/sign.glb'
-    })
     
-    Transform.createOrReplace(sign, {
-        position: Vector3.create(3, .5, 2), // Between ground and dozey
-        scale: Vector3.create(1, 1, 1), // Scale as needed
-        rotation: Quaternion.fromEulerDegrees(-10, 10, 0)
-    })
-
-    // Add dozey.glb on top of the skull pile
+    // Create 20 skeletons scattered around the spiral
+    createSkeletons()
+ 
+    utils.timers.setTimeout(() => {
+        movePlayerTo({
+            newRelativePosition: Vector3.create(-0.50, 41.05, -9), // At the top of the spiral
     
-    GltfContainer.createOrReplace(dozey!, {
-        src: 'models/dozey.glb'
-    })
-
-    Animator.create(dozey!, {
-        states: [
-            {
-                clip: "Dozing_Elderly",
-                playing: true,
-                loop: true
-            },
-            {
-                clip: "Angry_To_Tantrum_Sit",
-                playing: false,
-                loop: true
-            },
-            {
-                clip: "Angry_Ground_Stomp",
-                playing: false,
-                loop: true
-            },
-            {
-                clip: "Zombie_Scream",
-                playing: false,
-                loop: true
-            }
-        ]
-    })
-    Animator.getClip(dozey!, "Dozing_Elderly").playing = true
     
-    Transform.createOrReplace(dozey!, {
-        position: Vector3.create(.2, -0.2, .2), // On top of the skull pile
-        scale: Vector3.create(1, 1, 1), // Scale as needed
-        rotation: Quaternion.fromEulerDegrees(0, 0, 0),
-        parent: skullPile!
-    })
-    
-    // Create 20 skeletons just outside the darkness sphere
-    const darknessRadius = 10.5 // Same as darkness sphere radius
-    
-    for (let i = 0; i < 20; i++) {
-        const skeleton = engine.addEntity()
-        GltfContainer.createOrReplace(skeleton, {
-            src: 'models/skeleton.glb'
+            cameraTarget: Vector3.create(10, 30, 10),
         })
 
-        Animator.create(skeleton, {
+    }, 4000);
+    
+    
+    createVortex()
+    
+    //createVirtualCamera()
+    console.log("Stage3 spiral scene created")
+}
+
+function createSkeletons() {
+    // Create 20 skeletons within the spiral GLB model
+    const skeletonCount = 20
+    const spiralRadius = 10 // Within the spiral radius
+    const maxHeight = 50 // Up to height 50
+    
+    for (let i = 0; i < skeletonCount; i++) {
+        const skeleton = engine.addEntity()
+        
+        // Create skeleton with random position within the spiral
+        const angle = Math.random() * Math.PI * 2 // Random angle
+        const distance = Math.random() * spiralRadius // Random distance within radius 10
+        const x = Math.cos(angle) * distance
+        const z = Math.sin(angle) * distance
+        const y = Math.random() * maxHeight // Random height up to 50
+        
+        GltfContainer.createOrReplace(skeleton, {
+            src: 'models/skeleton.glb',
+            visibleMeshesCollisionMask: ColliderLayer.CL_PHYSICS
+        })
+
+        // Add animation
+        Animator.createOrReplace(skeleton, {
             states: [
                 {
-                    clip: "Swim_Forward",
+                    clip: "Swim_Idle",
                     playing: true,
                     loop: true
                 }
             ]
         })
-        Animator.getClip(skeleton, "Swim_Forward").playing = true
-        
-        // Position skeletons in a circle just outside the darkness sphere
-        const angle = (i / 20) * Math.PI * 2
-        const distance = darknessRadius + 5 + Math.random() * 10 // 5-15 units outside the sphere
-        const x = Math.cos(angle) * distance
-        const z = Math.sin(angle) * distance
-        const y = Math.random() * 2 // Slight height variation
         
         Transform.createOrReplace(skeleton, {
             position: Vector3.create(x, y, z),
             scale: Vector3.create(2, 2, 2), // Scale as needed
-            rotation: Quaternion.fromEulerDegrees(0, Math.random() * 360, 0)
+            rotation: Quaternion.fromEulerDegrees(0, Math.random() * 360, 0) // Random rotation
         })
         
         skeletons.push(skeleton)
     }
 
-    createCandles()
-    const playerPos = Transform.get(engine.PlayerEntity).position;
-    movePlayerTo({
-        newRelativePosition: Vector3.create(2, 1, 2), // Top of the tube
-        cameraTarget: Vector3.add(Vector3.create(0, 1, 0), Vector3.Down()), // Look down
+    console.log(`${skeletonCount} skeletons created within the spiral`)
+}
+
+
+let vortex: Entity | null = null
+function createVortex() {
+    vortex = engine.addEntity()
+    
+    // If you have a different model name
+    GltfContainer.createOrReplace(vortex, {
+        src: 'models/vortex.glb', // or whatever your vortex model is called
+        visibleMeshesCollisionMask: ColliderLayer.CL_PHYSICS,
+        invisibleMeshesCollisionMask: ColliderLayer.CL_NONE
     })
     
+    Transform.createOrReplace(vortex, {
+        position: Vector3.create(4, .3, 8), // Bottom of spiral
+        scale: Vector3.create(3, 3, 3), // Adjust scale as needed
+        rotation: Quaternion.fromEulerDegrees(0, 0, 0)
+    })
+
+    // Add trigger area to the vortex for teleportation
+    TriggerArea.setBox(vortex)
+    triggerAreaEventsSystem.onTriggerEnter(vortex, () => {
+        console.log("Player touched vortex - teleporting to stage4")
+        
+        // Use UI fade transition
+        fadeTransition(() => {
+            // Clean up stage3 while screen is black
+            cleanupStage3()
+            
+            // Import and create stage4
+            import('./stage4').then((stage4) => {
+                stage4.createStage4Scene()
+            })
+        })
+    })
+
+    const mutableLight = Transform.getMutable(portalLight)
+    mutableLight.position = Vector3.create(4, .3, 8)
+    mutableLight.parent = undefined
+
+    LightSource.getMutable(portalLight).active = true
     
-   
-    console.log("Stage3 falling tube scene created")
+
+    
+    return vortex
+}
+
+function addSounds(){
+    AudioSource.getMutable(heart).playing = true
+    AudioSource.getMutable(heart).loop = true
+
+    
+    AudioSource.getMutable(creaky).playing = false
+
+    AudioSource.getMutable(whisper).playing = false
+
+    AudioSource.getMutable(dungeon).playing = true
+    AudioSource.getMutable(whisper).loop = true
 }
 
 export function cleanupStage3() {
     console.log("Cleaning up stage3...")
     
-    // Remove sign
-    if (sign) {
+    // Remove spiral2
+    if (spiral2) {
         try {
-            engine.removeEntity(sign)
+            engine.removeEntity(spiral2)
         } catch (e) {
             // Entity might already be removed
         }
-        sign = null
+        spiral2 = null
     }
+    
     
     // Remove all skeletons
     for (const skeleton of skeletons) {
@@ -150,312 +180,23 @@ export function cleanupStage3() {
     }
     skeletons.length = 0 // Clear the array
     
-    // Remove all candles
-    for (const candle of candles) {
-        try {
-            engine.removeEntity(candle)
-        } catch (e) {
-            // Entity might already be removed
-        }
-    }
-    candles.length = 0 // Clear the array
+   
     
-    // Remove skull pile
-    if (skullPile) {
+    // Remove vortex
+    if (vortex) {
         try {
-            engine.removeEntity(skullPile)
+            engine.removeEntity(vortex)
         } catch (e) {
             // Entity might already be removed
         }
-        skullPile = null
+        vortex = null
     }
     
-    // Remove dozey
-    if (dozey) {
-        try {
-            engine.removeEntity(dozey)
-        } catch (e) {
-            // Entity might already be removed
-        }
-        dozey = null
-    }
-    
-    // Remove all light entities
-    const allLights = engine.getEntitiesWith(LightSource)
-    for (const [entity] of allLights) {
-        try {
-            engine.removeEntity(entity)
-        } catch (e) {
-            // Entity might already be removed
-        }
-    }
-    
-    // Remove all GltfContainer entities (fallback cleanup)
-    // Remove only stage3-specific GltfContainer entities
-    // Keep fog.glb and any other persistent models
-    const allGltfEntities = engine.getEntitiesWith(GltfContainer)
-    for (const [entity] of allGltfEntities) {
-        try {
-            const gltf = GltfContainer.get(entity)
-            // Only remove stage3-specific models
-            if (gltf.src === 'models/pileskulls.glb' || 
-                gltf.src === 'models/dozey.glb' || 
-                gltf.src === 'models/skeleton.glb' ||
-                gltf.src === 'models/sign.glb' ||
-                gltf.src === 'models/candle.glb') {
-                engine.removeEntity(entity)
-            }
-            // Keep fog.glb, fence.glb, and other persistent models
-        } catch (e) {
-            // Entity might already be removed
-        }
-    }
+    // Turn off portal light and reset its parent
+    LightSource.getMutable(portalLight).active = false
+    const portalTransform = Transform.getMutable(portalLight)
+    portalTransform.parent = undefined // Remove parent reference
+    portalTransform.position = Vector3.create(0, 0, 0) // Reset position
     
     console.log("Stage3 cleanup completed")
-}
-
-function createCandles() {
-    // Create 60 candles around the dozey area
-
-    const totalCandles = 50
-    const candleRadius = 8 // Distance from dozey
-    
-    const litCandles: Set<Entity> = new Set() // Track lit candles using a Set
-    for (let i = 0; i < totalCandles; i++) {
-        const candle = engine.addEntity()
-        GltfContainer.createOrReplace(candle, {
-            src: 'models/candle.glb',
-            visibleMeshesCollisionMask: ColliderLayer.CL_PHYSICS
-        })
-
-        Animator.createOrReplace(candle, {
-            states: [
-              {
-                clip: 'Flame',
-                playing: false,
-                loop: false
-              },
-              {
-                clip: 'Extinguish',
-                playing: true,
-                loop: false
-              },
-              {
-                clip: 'FlameIdle',
-                playing: false,
-                loop: true
-              },
-            ]
-          })
-
-        // Position candles in a circle around dozey
-        const angle = (i / totalCandles) * Math.PI * 2
-        const x = Math.cos(angle) * candleRadius
-        const z = Math.sin(angle) * candleRadius
-        const y = 0.5 // Slightly above ground
-        
-        Transform.createOrReplace(candle, {
-            position: Vector3.create(x, y, z),
-            scale: Vector3.create(0.5, 0.5, 0.5), // Smaller candles
-            rotation: Quaternion.fromEulerDegrees(0, Math.random() * 360, 0)
-        })
-        
-
-        // Add pointer interaction for clicking
-        pointerEventsSystem.onPointerDown(
-            {
-                entity: candle,
-                opts: { button: InputAction.IA_PRIMARY, hoverText: 'Light Candle' }
-            },
-            () => {
-                // Check if this candle is already lit
-                if (!litCandles.has(candle)) {
-                    // Light the candle
-                    litCandles.add(candle)
-                    
-
-                    Animator.getClip(candle, 'Flame').playing= true
-
-                    utils.timers.setTimeout(() => {
-                        Animator.getClip(candle, 'FlameIdle').playing= true
-                    }, 500)
-                    
-                    
-                    // Check if all candles are lit
-                    if (litCandles.size === totalCandles) {
-                        console.log("All candles lit! Teleportation activated!")
-                        // Enable the teleportation trigger
-                        const light = engine.addEntity();
-                        
-                       
-    
-                        Transform.create(light, {
-                        position: Vector3.create(0, 1, 0),
-                        parent: dozey!
-                        
-                        })
-                        Animator.getClip(dozey!, "Dozing_Elderly").playing = false;
-                        Animator.getClip(dozey!, 'Angry_To_Tantrum_Sit').playing = true;
-
-                        AudioSource.getMutable(angry).playing = true
-                        AudioSource.getMutable(angry).loop = true
-                        
-
-                        utils.timers.setTimeout(()=>{
-                            Animator.getClip(dozey!, 'Angry_To_Tantrum_Sit').playing = false;
-                            Animator.getClip(dozey!, 'Zombie_Scream').playing = true;
-                            utils.timers.setTimeout(()=>{
-                                
-                                
-                                spawnAngels()
-                                
-                                
-                                // After UI shows, clean up and go back to stage1
-                                utils.timers.setTimeout(() => {
-                                    // Show the end screen
-                                showEndScreen()
-                                }, 15000) // Wait 5 seconds for UI to show, then transition
-                            }, 5000)
-                        }, 5000)
-                  
-                       
-                        utils.tweens.startScaling(
-                            dozey!,
-                            Vector3.create(1, 1, 1),
-                            Vector3.create(3, 3, 3),
-                            3,
-                            utils.InterpolationType.EASEOUTQUAD,
-                            () => {
-                    
-                                
-
-                        })
-
-
-                        
-                    
-                        LightSource.create (light!, {
-                            type: {
-                                    $case: 'point',
-                                    point: {}
-                                },
-                            color: Color3.Red(),
-                            intensity: 53333322,//193456,
-                        active: true})
-                       
-                    }
-                } else {
-                    console.log("This candle is already lit!")
-                }
-            }
-        )
-        
-        
-        candles.push(candle)
-    }
-    
-    
-
-   
-}
-
-let angels: Entity[] = []
-export function spawnAngels() {
-    const numberOfAngels = 1;
-    console.log("Spawning 20 angels...")
-    
-    const darknessRadius = 10.5 // Same as darkness sphere radius
-    const dozeyPos = Transform.get(dozey!).position
-    const spawnDistance = darknessRadius + 15 // Spawn 15 units outside the darkness sphere
-    
-    for (let i = 0; i < numberOfAngels; i++) {
-        const angel = engine.addEntity()
-        
-        // Create angel model
-        GltfContainer.createOrReplace(angel, {
-            src: 'models/angel.glb',
-            visibleMeshesCollisionMask: ColliderLayer.CL_PHYSICS
-        })
-
-        Animator.createOrReplace(angel, {
-            states: [
-                {
-                    clip: "Sneaky_Walk_inplace",
-                    playing: true,
-                    loop: true
-                },
-                {
-                    clip: "Zombie_Scream",
-                    playing: false,
-                    loop: true
-                }
-            ]
-        })
-        Animator.getClip(angel, "Sneaky_Walk_inplace").playing = true
-
-        
-        // Position angels in a circle around the darkness sphere
-        const angle = (i / numberOfAngels) * Math.PI * 2
-        const x = Math.cos(angle) * spawnDistance
-        const z = Math.sin(angle) * spawnDistance
-        const y = 2 + Math.random() * 3 // Random height between 2-5
-        
-        Transform.createOrReplace(angel, {
-            position: Vector3.create(x, 0, z),
-            scale: Vector3.create(1.5, 1.5, 1.5),
-            rotation: Quaternion.fromEulerDegrees(0, Math.random() * 360, 0)
-        })
-        
-        angels.push(angel)
-    }
-    
-    // Start the angel movement system
-    startAngelMovement()
-    
-    console.log("20 angels spawned and moving toward dozey")
-}
-
-function startAngelMovement() {
-    const angelMovementSystem = (dt: number) => {
-        if (angels.length === 0) return
-        
-        const dozeyPos = Transform.get(engine.PlayerEntity).position
-        
-        for (const angel of angels) {
-            if (!Transform.has(angel)) continue
-            
-            const angelTransform = Transform.getMutable(angel)
-            const angelPos = angelTransform.position
-            
-            // Calculate direction to dozey
-            const dx = dozeyPos.x - angelPos.x
-            const dz = dozeyPos.z - angelPos.z
-            const distance = Math.sqrt(dx * dx + dz * dz)
-            
-            // Only move if not too close to dozey
-            if (distance > 2) {
-                const speed = 1.5 * dt // Adjust speed as needed
-                const moveX = (dx / distance) * speed
-                const moveZ = (dz / distance) * speed
-                
-                angelPos.x += moveX
-                angelPos.z += moveZ
-                
-                // Face the direction of movement
-                const lookDirection = Vector3.create(dx, 0, dz)
-                if (Vector3.length(lookDirection) > 0.001) {
-                    angelTransform.rotation = Quaternion.lookRotation(lookDirection)
-                }
-
-                Animator.getClip(angel, "Sneaky_Walk_inplace").playing = true
-                Animator.getClip(angel, "Zombie_Scream").playing = false
-
-            } else{
-                Animator.getClip(angel, "Sneaky_Walk_inplace").playing = false
-                Animator.getClip(angel, "Zombie_Scream").playing = true
-            }
-        }
-    }
-    
-    engine.addSystem(angelMovementSystem)
 }

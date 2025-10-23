@@ -7,9 +7,9 @@ import { AudioSource, ColliderLayer, engine, Entity, GltfContainer, InputModifie
 import { Vector3, Quaternion } from "@dcl/sdk/math";
 import { activateAngels, candleSystem, createCandle, forceLightCandle, gameOver, setGameOver } from "./candle";
 import { triggerSceneEmote } from "~system/RestrictedActions";
-import { light, setLight } from "./landscape";
+import { foglight, setLight } from "./landscape";
 import { heart, wind } from "./utils";
-import { isGameStarted } from "./ui";
+import { isGameStarted, fadeTransition } from "./ui";
 import * as utils from '@dcl-sdk/utils'
 const WALL_MODEL_PATH = "models/fence.glb"
 export interface EntityStatus  {
@@ -238,7 +238,7 @@ export class Stage  {
     //------------
     create_tree_instances() {
 
-        for ( let i = 0 ; i < 15  ; i++ ) {
+        for ( let i = 0 ; i < 20 ; i++ ) {
             let fl = this.create_tree_entity( 0, 0 ,0, 0 , this.wall_height , 0 );
             fl.used = false;
             this.trees.push( fl );
@@ -750,10 +750,11 @@ export class Stage  {
         TriggerArea.setBox(w)
         triggerAreaEventsSystem.onTriggerEnter(w, () => {
             
+             
 
-                if(!activateAngels) return;
+            if(gameOver || !activateAngels) return;
             //GltfContainer.createOrReplace(w, { src: 'models/close.glb' });
-            
+            setGameOver()
             InputModifier.createOrReplace(engine.PlayerEntity, {
                     mode: InputModifier.Mode.Standard({
                         disableAll: true,
@@ -769,7 +770,7 @@ export class Stage  {
                     triggerSceneEmote({ src: 'animations/statuestill_emote.glb', loop: true }) 
                 }, 8000)
                 
-                setGameOver()
+               
         });
         
 
@@ -1022,12 +1023,12 @@ export function cinematicCameraPan(stage: Stage) {
                         const mainCamera = MainCamera.getMutable(engine.CameraEntity)
                         mainCamera.virtualCameraEntity = undefined
 
-                        VirtualCamera.deleteFrom(cinematicCamera)
-                        engine.removeEntity(cinematicCamera)
                         
-                        // Clean up stage and reset scene
-                        cleanupStage(stage)
-                        resetSceneToNewState(stage)
+                        
+                        // Clean up stage and reset scene (with proper sequencing)
+                           
+                        resetSceneToNewState(stage, cinematicCamera)
+                        
 
                         InputModifier.createOrReplace(engine.PlayerEntity, {
                             mode: InputModifier.Mode.Standard({
@@ -1063,7 +1064,7 @@ export function angelSystem(stage: Stage) {
         // Cache player transform and update follow light
         const playerT = Transform.get(engine.PlayerEntity)
         const playerPos = playerT.position
-        const mutableLight = Transform.getMutable(light)
+        const mutableLight = Transform.getMutable(foglight)
         mutableLight.position = Vector3.create(playerPos.x + 5, 18, playerPos.z)
 
         // Precompute player's forward (rotate -Z by quaternion)
@@ -1164,7 +1165,7 @@ export function stageUpdateSystem(stage: Stage) {
         
 
 
-        LightSource.getMutable(light).active = activateAngels
+        LightSource.getMutable(foglight).active = activateAngels
 
     }
 }
@@ -1172,7 +1173,7 @@ export function stageUpdateSystem(stage: Stage) {
 // Global reference to stage systems for cleanup
 export let stageSystems: ((() => void) | ((dt: number) => void))[] = []
 
-export function cleanupStage(stage: Stage) {
+export async function cleanupStage(stage: Stage) {
     console.log("Cleaning up stage and all entities...")
      
     // 1. Remove all stage systems
@@ -1259,36 +1260,29 @@ export function cleanupStage(stage: Stage) {
         AudioSource.getMutable(wind).playing = false
     }
     
-    // Note: Candles will remain in the scene for now
-    
-    // Remove stage systems but keep darkness rotation system
-    for (const system of stageSystems) {
-        engine.removeSystem(system)
-    }
-    stageSystems.length = 0
-    
-    
     
     console.log("Stage cleanup completed")
 }
 
-export function resetSceneToNewState(stage: Stage) {
+export function resetSceneToNewState(stage: Stage,  cinematicCamera: any) {
     console.log("Resetting scene to new state...")
-    // Import and create the grim reaper boat scene
-    import('./stage2').then((stage2) => {
-        
-        stage2.createGrimReaperBoatScene()
+    
+    // Use UI fade transition
+    fadeTransition(() => {
+        // Import and create the gr
+        // im reaper boat scene
+        VirtualCamera.deleteFrom(cinematicCamera)
+     engine.removeEntity(cinematicCamera)
+        cleanupStage(stage)
+        import('./stage2').then((stage2) => {
+            stage2.createGrimReaperBoatScene()
+        })
     })
 }
 
 export function SetStage1Scene(){
     try {
 
-        
-
-        setLight()
-        console.log("Starting SetStage1Scene...")
-        
         const stage = new Stage()
         console.log("Stage created successfully")
         

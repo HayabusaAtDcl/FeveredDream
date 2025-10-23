@@ -37,6 +37,14 @@ export const  angry = engine.addEntity()
 Transform.create(angry)
 AudioSource.create(angry, { audioClipUrl: 'sounds/angry.mp3',  playing: false, loop: true, global: true, volume: 1 })
 
+export const  dungeon = engine.addEntity()
+Transform.create(dungeon)
+AudioSource.create(dungeon, { audioClipUrl: 'sounds/dungeon.mp3',  playing: false, loop: true, global: true, volume: 1 })
+
+export const  final = engine.addEntity()
+Transform.create(final)
+AudioSource.create(final, { audioClipUrl: 'sounds/final.mp3',  playing: false, loop: true, global: true, volume: 1 })
+
 
 
 export function generateRandomNumber(min: number, max: number): number {

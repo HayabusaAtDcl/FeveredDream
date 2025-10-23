@@ -3,7 +3,8 @@ import { Vector3, Quaternion, Color3, Color4 } from "@dcl/sdk/math";
 import { movePlayerTo } from "~system/RestrictedActions";
 import * as utils from '@dcl-sdk/utils'
 import { creaky, heart, whisper, wind } from "./utils";
-import { light } from "./landscape";
+import { portalLight } from "./landscape";
+import { fadeTransition } from "./ui";
 // Global reference to the grim reaper boat entity
 let grimReaperBoat: Entity | null = null
 
@@ -12,7 +13,9 @@ let grimReaperBoat: Entity | null = null
 
 let waterGround: Entity | null = null
 let skull: Entity | null = null
-let teleportPlane: Entity | null = null
+
+let vortexStage2: Entity | null = null
+let wallparent: Entity | null = null
 
 
 const candles: Entity[] = []
@@ -89,12 +92,12 @@ export function createGrimReaperBoatScene() {
 
     // Start position (middle left)
     const startPos = Vector3.create(-halfScale + 40, 2, 0) // Middle-left
-    
+    //const startPos = Vector3.create(halfScale -40, 2, 0)
     // End position (middle right)  
     const endPos = Vector3.create(halfScale -40, 2, 0) // Middle-right
 
      // Create the skull at the end position
-     const skull = engine.addEntity()
+     skull = engine.addEntity()
      GltfContainer.createOrReplace(skull, {
          src: 'models/headwall.glb',
          visibleMeshesCollisionMask: ColliderLayer.CL_PHYSICS
@@ -107,31 +110,30 @@ export function createGrimReaperBoatScene() {
         rotation: Quaternion.fromEulerDegrees(0, -90, 0)
     })
     
-    // Create invisible teleportation plane on top of skull
-    const teleportPlane = engine.addEntity()
-    MeshRenderer.setPlane(teleportPlane)
-    Material.setPbrMaterial(teleportPlane, {
-        albedoColor: Color4.Clear(),
-        specularIntensity: 0,
-        roughness: 1,
-        metallic: 0
-    })
-    Transform.createOrReplace(teleportPlane, {
-        position: Vector3.create(0, -0.68, -0.7), // Center of the skull
-        scale: Vector3.create(.25,.25,.25), // Large enough to step on
-        rotation: Quaternion.fromEulerDegrees(-90, 0, 0),
-        parent: skull // This makes it relative to the skull's position
-    })
 
-
+    vortexStage2 = engine.addEntity()
+    GltfContainer.createOrReplace(vortexStage2, {
+        src: 'models/vortex.glb',
+        visibleMeshesCollisionMask: ColliderLayer.CL_PHYSICS,
+        invisibleMeshesCollisionMask: ColliderLayer.CL_NONE
+    })
+    Transform.createOrReplace(vortexStage2, {
+        position: Vector3.create(0, -0.69, -0.7), // Center of the skull // Slightly above the plane, centered in candles
+        scale: Vector3.create(0.1, 0.1, 0.1),
+        rotation: Quaternion.fromEulerDegrees(0, 0, 0),
+        parent: skull
+    })
 
     
     const litCandles: Set<Entity> = new Set() // Track lit candles using a Set
+    
+    // Position candles in a circle on top of the vortex (relative to vortex's local space)
+    const radius = 0.15 // Circle radius around the vortex center
     const candlePositions = [
-        Vector3.create(-.1, -.53, .15),  // Bottom left
-        Vector3.create(.1, -.53,  .2),   // Bottom right  
-        Vector3.create(-.13, -.3, .13),   // Top left
-        Vector3.create(.13, -.3, .13)     // Top right
+        Vector3.create(radius, 0.05, 0),       // Right
+        Vector3.create(0, 0.05, radius),       // Front
+        Vector3.create(-radius, 0.05, 0),      // Left
+        Vector3.create(0, 0.05, -radius)       // Back
     ]
 
     const totalCandles = 4
@@ -165,9 +167,9 @@ export function createGrimReaperBoatScene() {
         
         Transform.createOrReplace(candle, {
             position: candlePositions[i],
-            scale:  Vector3.create(0.05, .05, 0.05),
-            rotation: Quaternion.fromEulerDegrees(90, 0, 0),
-            parent: teleportPlane // Make them relative to the teleport plane
+            scale:  Vector3.create(0.1, .1, 0.1),
+            rotation: Quaternion.fromEulerDegrees(0, 0, 0),
+            parent: vortexStage2 // Make them relative to the teleport plane
         })
         
         // Add pointer interaction for clicking
@@ -194,27 +196,18 @@ export function createGrimReaperBoatScene() {
                     // Check if all candles are lit
                     if (litCandles.size === totalCandles) {
                         console.log("All candles lit! Teleportation activated!")
-                        // Enable the teleportation trigger
-                        const light = engine.addEntity();
-    
-                        Transform.create(light, {
-                        position: Vector3.create(0, 0, 0),
-                        parent: candle
-                        
-                        })
-                    
-                        LightSource.create (light, {
-                            type: {
-                                    $case: 'point',
-                                    point: {}
-                                },
-                            color: Color3.Red(),
-                            intensity: 533333,//193456,
-                        active: true})
 
+                        
+                        const mutableLight = Transform.getMutable(portalLight)
+                        mutableLight.position = Vector3.create(0, -0.55, 0.0) // Same as vortex position
+                        mutableLight.parent = vortexStage2! // Parent to skull so it moves with it
+                        
+                        
+                        LightSource.getMutable(portalLight).active = true
+                        
                        
 
-                        TriggerArea.setBox(teleportPlane)
+                        TriggerArea.setBox(vortexStage2!)
                     }
                 } else {
                     console.log("This candle is already lit!")
@@ -225,19 +218,22 @@ export function createGrimReaperBoatScene() {
         candles.push(candle)
     }
 
+   
+
     // Modified teleportation trigger (only works when all candles are lit)
-    triggerAreaEventsSystem.onTriggerEnter(teleportPlane, () => {
+    triggerAreaEventsSystem.onTriggerEnter(vortexStage2, () => {
         if (litCandles.size === totalCandles) {
             console.log("Player stepped on skull - teleporting to stage3")
             
-            // Clean up stage2
-            cleanupGrimReaperBoatScene()
-            
-            // Import and create stage3
-            import('./stage3').then((stage3) => {
-                // Pass the darkness sphere reference to stage3
+            // Use UI fade transition
+            fadeTransition(() => {
+                // Clean up stage2 while screen is black
+                cleanupGrimReaperBoatScene()
                 
-                stage3.createStage3Scene()
+                // Import and create stage3
+                import('./stage3').then((stage3) => {
+                    stage3.createStage3Scene()
+                })
             })
         } else {
             console.log(`Need to light all candles first! (${litCandles.size}/${totalCandles})`)
@@ -289,7 +285,7 @@ function movePlayerToBoat(){
 
 export function cleanupGrimReaperBoatScene() {
     console.log("Cleaning up grim reaper boat scene...")
-    
+   
     
     // Remove the boat entity
     if (grimReaperBoat) {
@@ -323,32 +319,65 @@ export function cleanupGrimReaperBoatScene() {
     }
     candles.length = 0 // Clear the candles array
     
-    if (waterGround && VideoPlayer.has(waterGround)) {
-        const videoPlayer = VideoPlayer.getMutable(waterGround)
-        videoPlayer.playing = false
-    }
-    
-    engine.removeEntity(waterGround!)
-    waterGround = null
-
-
-
-    engine.removeEntity(skull!)
-    skull = null
-    
-    
-    if (teleportPlane) {
-        engine.removeEntity(teleportPlane)
-        teleportPlane = null
+    // Remove water ground
+    if (waterGround) {
+        try {
+            if (VideoPlayer.has(waterGround)) {
+                const videoPlayer = VideoPlayer.getMutable(waterGround)
+                videoPlayer.playing = false
+                VideoPlayer.deleteFrom(waterGround)
+            }
+            engine.removeEntity(waterGround)
+        } catch (e) {
+            // Entity might already be removed
+        }
+        waterGround = null
     }
 
-    engine.removeEntityWithChildren(wallparent);
+    // Remove skull
+    if (skull) {
+        try {
+            engine.removeEntity(skull)
+        } catch (e) {
+            // Entity might already be removed
+        }
+        skull = null
+    }
+    
+    // Turn off portal light and reset its parent
+    LightSource.getMutable(portalLight).active = false
+    const portalTransform = Transform.getMutable(portalLight)
+    portalTransform.parent = undefined // Remove parent reference
+    portalTransform.position = Vector3.create(0, 0, 0) // Reset position
+    
+
+    // Remove vortex at candles center if present
+    if (vortexStage2) {
+        try {
+            engine.removeEntity(vortexStage2)
+        } catch (e) {
+            // Entity might already be removed
+        }
+        vortexStage2 = null
+    }
+
+    // Remove all walls
+    if (wallparent) {
+        try {
+            engine.removeEntityWithChildren(wallparent)
+        } catch (e) {
+            // Entity might already be removed
+        }
+        wallparent = null
+    }
     
     console.log("Grim reaper boat scene cleanup completed")
 }
 
-const wallparent = engine.addEntity();
 function addWalls(){
+    // Create the parent entity for all walls
+    wallparent = engine.addEntity()
+    
     // Create black walls around the water ground perimeter
     const waterScale = 200 // Your water ground scale
     const halfScale = waterScale / 2
@@ -439,7 +468,7 @@ function addWalls(){
 const skeletons: Entity[] = []
 function addSkeletons(){
     // Create 10 skeletons around the boat route
-    const skeletonCount = 16
+    const skeletonCount = 20
     
 
     for (let i = 0; i < skeletonCount; i++) {
@@ -447,7 +476,7 @@ function addSkeletons(){
         
         // Create skeleton with random position along the route
         const routeProgress = i / (skeletonCount - 1) // 0 to 1 along the route
-        const startPos = Vector3.create(-200, 0, 0) // Your start position
+        const startPos = Vector3.create(-180, 0, 0) // Your start position
         const endPos = Vector3.create(180, 0, 0) // Your end position
         const skeletonPos = Vector3.lerp(startPos, endPos, routeProgress)
         

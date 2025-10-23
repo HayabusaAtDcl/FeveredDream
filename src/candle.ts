@@ -2,16 +2,12 @@ import {
   engine,
   Entity,
   Transform,
-  MeshRenderer,
-  MeshCollider,
   pointerEventsSystem,
   InputAction,
-  LightSource,
-  ColliderLayer,
   GltfContainer,
   Animator
 } from '@dcl/sdk/ecs'
-import { Color3, Vector3 } from '@dcl/sdk/math'
+import { Vector3 } from '@dcl/sdk/math'
 import * as utils from '@dcl-sdk/utils'
 import { isGameStarted } from './ui'
 export let gameOver: boolean = false;
@@ -138,6 +134,7 @@ function lightCandle(c: CandleState) {
   c.active = true
   c.timer = CANDLE_DURATION
   
+  Animator.getClip(c.entity, 'Extinguish').playing= false
   Animator.getClip(c.entity, 'Flame').playing= true
 
   utils.timers.setTimeout(() => {
@@ -150,8 +147,10 @@ function extinguishCandle(c: CandleState) {
   c.active = false
   c.timer = 0
   
+  Animator.getClip(c.entity, 'Flame').playing= false
+  Animator.getClip(c.entity, 'FlameIdle').playing= false
+  
   Animator.getClip(c.entity, 'Extinguish').playing= true
-
   console.log('💨 Candle expired and reappeared.')
 }
 

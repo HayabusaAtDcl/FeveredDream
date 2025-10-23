@@ -3,12 +3,17 @@ import {
 } from '@dcl/sdk/ecs'
 import { Color4 } from '@dcl/sdk/math'
 import ReactEcs, { Label, ReactEcsRenderer, UiEntity, Button } from '@dcl/sdk/react-ecs'
+import * as utils from '@dcl-sdk/utils'
 
 // Global state for UI
 let showEndUI = false
 let endUIOpacity = 0
 let showStartUI = true
 let gameStarted = false
+
+// Fade transition state
+let showFade = false
+let fadeOpacity = 0
 
 export function setupUi() {
   ReactEcsRenderer.setUiRenderer(uiComponent)
@@ -48,6 +53,44 @@ export function closeStartScreen() {
 // Function to check if game has started
 export function isGameStarted() {
   return gameStarted
+}
+
+// Function to fade out, execute callback, then fade in
+export function fadeTransition(onTransition: () => void): Promise<void> {
+  return new Promise((resolve) => {
+    console.log("Starting fade transition...")
+    showFade = true
+    fadeOpacity = 0
+    
+    // Fade out (to black) - slower fade
+    const fadeOutSystem = (dt: number) => {
+      fadeOpacity += dt * 1 // Fade out over 1 second (slower)
+      if (fadeOpacity >= 1) {
+        fadeOpacity = 1
+        engine.removeSystem(fadeOutSystem)
+        
+        console.log("Fade to black complete, executing transition...")
+        // Execute the transition callback
+        onTransition()
+        
+        // Wait longer for assets to load, then fade back in
+        utils.timers.setTimeout(() => {
+          const fadeInSystem = (dt: number) => {
+            fadeOpacity -= dt * 0.5 // Fade in over 2 seconds (even slower)
+            if (fadeOpacity <= 0) {
+              fadeOpacity = 0
+              showFade = false
+              engine.removeSystem(fadeInSystem)
+              console.log("Fade transition complete")
+              resolve()
+            }
+          }
+          engine.addSystem(fadeInSystem)
+        }, 4000) // Hold black screen for 2 seconds to let assets load
+      }
+    }
+    engine.addSystem(fadeOutSystem)
+  })
 }
 
 const uiComponent = () => (
@@ -153,7 +196,7 @@ const uiComponent = () => (
                 }}
               />
               <Label
-                value="fades, they will hunt you down. But no fear.  Your journey will"
+                value="fades, they will hunt you down. But have no fear.  Your journey will"
                 fontSize={16}
                 color={Color4.create(0.9, 0.9, 0.9, 1)}
                 uiTransform={{ 
@@ -163,7 +206,7 @@ const uiComponent = () => (
                 }}
               />
               <Label
-                value="take you through three different areas. Just explore and"
+                value="take you through four different stages. Just explore and"
                 fontSize={16}
                 color={Color4.create(0.9, 0.9, 0.9, 1)}
                 uiTransform={{ 
@@ -173,7 +216,7 @@ const uiComponent = () => (
                 }}
               />
               <Label
-                value="see if you can reach all three."
+                value="see if you can reach the end."
                 fontSize={16}
                 color={Color4.create(0.9, 0.9, 0.9, 1)}
                 uiTransform={{ 
@@ -200,6 +243,22 @@ const uiComponent = () => (
           </UiEntity>
         </UiEntity>
       </UiEntity>
+    )}
+
+    {/* Fade Transition Overlay */}
+    {showFade && (
+      <UiEntity
+        uiTransform={{
+          width: '100%',
+          height: '100%',
+          positionType: 'absolute',
+          position: { top: 0, left: 0 },
+          display: 'flex'
+        }}
+        uiBackground={{ 
+          color: Color4.create(0, 0, 0, fadeOpacity) // Full black fade
+        }}
+      />
     )}
 
     {/* End Screen Overlay */}
@@ -235,7 +294,7 @@ const uiComponent = () => (
             }}
           />
           <Label
-            value="Thank you for playing!"
+            value="Thank you for visiting!"
             fontSize={24}
             color={Color4.create(1, 1, 1, endUIOpacity)}
             uiTransform={{ 
