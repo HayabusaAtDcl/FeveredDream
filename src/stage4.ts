@@ -379,7 +379,7 @@ function createCandles() {
                         parent: dozey!
                         
                         })
-                        LightSource.create (light!, {
+                        LightSource.createOrReplace (light!, {
                             type: {
                                     $case: 'point',
                                     point: {}

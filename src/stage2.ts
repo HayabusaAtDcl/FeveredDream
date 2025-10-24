@@ -1,4 +1,4 @@
-import { engine, Entity, GltfContainer, Transform, Material, MeshRenderer, MeshCollider, ColliderLayer, EntityUtils, Tween, triggerAreaEventsSystem, TriggerArea, TweenLoop, EasingFunction, TweenSequence, Animator, VideoPlayer, AudioSource, pointerEventsSystem, InputAction, LightSource } from "@dcl/sdk/ecs";
+import { engine, Entity, GltfContainer, Transform, Material, MeshRenderer, MeshCollider, ColliderLayer, EntityUtils, Tween, triggerAreaEventsSystem, TriggerArea, TweenLoop, EasingFunction, TweenSequence, Animator, VideoPlayer, AudioSource, pointerEventsSystem, InputAction, LightSource, GltfNodeModifiers, MaterialTransparencyMode, Billboard, BillboardMode, TextureWrapMode } from "@dcl/sdk/ecs";
 import { Vector3, Quaternion, Color3, Color4 } from "@dcl/sdk/math";
 import { movePlayerTo } from "~system/RestrictedActions";
 import * as utils from '@dcl-sdk/utils'
@@ -19,6 +19,8 @@ let wallparent: Entity | null = null
 
 
 const candles: Entity[] = []
+const ghosts: Entity[] = []
+
 export function createGrimReaperBoatScene() {
     addSounds()
     addWalls()
@@ -258,7 +260,7 @@ export function createGrimReaperBoatScene() {
     })
     
     
-    
+    addGhostBillboards()
     // Initially position player on the boat
     movePlayerToBoat();
 
@@ -318,6 +320,16 @@ export function cleanupGrimReaperBoatScene() {
         }
     }
     candles.length = 0 // Clear the candles array
+
+    // Remove all ghosts
+    for (const ghost of ghosts) {
+        try {
+            engine.removeEntity(ghost)
+        } catch (e) {
+            // Entity might already be removed
+        }
+    }
+    ghosts.length = 0 // Clear the ghosts array
     
     // Remove water ground
     if (waterGround) {
@@ -521,4 +533,69 @@ function addSounds(){
 
     AudioSource.getMutable(whisper).playing = true
     AudioSource.getMutable(whisper).loop = true
+}
+
+function addGhostBillboards() {
+    // Define two clusters of ghosts along the boat path
+    // Boat travels from x: -60 to x: 60, at y: 2
+    
+    // Cluster 1: 3 ghosts (on the left side of path, early in journey)
+    const cluster1Data = [
+        { position: Vector3.create(-30, 7, 11), scale: Vector3.create(3, 4, 2) },    // Large ghost
+        { position: Vector3.create(-32, 3, 10), scale: Vector3.create(3, 4, 2) },  // Medium ghost, higher
+        { position: Vector3.create(-28, 3.5, 12), scale: Vector3.create(2.5, 3, 1.5) } // Medium-large ghost, lower
+    ]
+    
+    // Cluster 2: 2 ghosts (on the right side of path, later in journey)
+    const cluster2Data = [
+        { position: Vector3.create(25, 5, -10), scale: Vector3.create(3.5, 4.5, 1) }, // Large ghost
+        { position: Vector3.create(27, 6.5, -11), scale: Vector3.create(2, 2.5, 1) }  // Small ghost, higher
+    ]
+
+    // Combine both clusters
+    const allGhosts = [...cluster1Data, ...cluster2Data]
+
+    for (let i = 0; i < allGhosts.length; i++) {
+        const ghostData = allGhosts[i]
+        const ghost = engine.addEntity()
+        
+        // Load the ghost GLB model
+        GltfContainer.createOrReplace(ghost, {
+            src: "models/ghost.glb"
+        })
+
+        // Position and scale the ghost
+        Transform.createOrReplace(ghost, {
+            position: ghostData.position,
+            scale: ghostData.scale,
+            rotation: Quaternion.fromEulerDegrees(0, 0, 0)
+        })
+
+        // Add billboard component to make it always face the player
+        Billboard.createOrReplace(ghost, {
+            billboardMode: BillboardMode.BM_Y // Billboard on Y axis (rotate to face camera)
+        })
+
+        // Add a spotlight above each ghost
+    /*     const ghostLight = engine.addEntity()
+        Transform.createOrReplace(ghostLight, {
+            position: Vector3.create(0, 3, 0), // Above the ghost
+            rotation: Quaternion.fromEulerDegrees(90, 0, 0), // Point downward
+            parent: ghost
+        })
+        
+        LightSource.createOrReplace(ghostLight, {
+            type: LightSource.Type.Spot({ 
+                innerAngle: 25, 
+                outerAngle: 45 
+            }),
+            color: Color4.Red(), //Color3.create(0.8, 1, 1), // Slightly blue-white light
+            intensity: 1111115,
+            active: true
+        }) */
+
+        ghosts.push(ghost)
+        const clusterNum = i < 3 ? 1 : 2
+        console.log(`Ghost ${i + 1} (Cluster ${clusterNum}) created at:`, ghostData.position)
+    }
 }
