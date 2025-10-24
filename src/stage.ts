@@ -1302,13 +1302,7 @@ export function SetStage1Scene(){
         
         const c1 = createCandle(Vector3.create(7, 0.3, 7))
         console.log("First candle created")
-        
-        for (let i = 0; i < 5; i++) {
-            const x = Math.random() * 84 - 42  // -42 → 42
-            const z = Math.random() * 84 - 42  // -42 → 42
-            createCandle(Vector3.create(x, 0.3, z))
-        }
-        console.log("Random candles created")
+       
         
         forceLightCandle(c1)
         console.log("First candle lit")

@@ -16,8 +16,8 @@ export function setGameOver(){
     gameOver = true
 }
 // 🔥 Candle config
-const MAX_ACTIVE_CANDLES = 5
-const CANDLE_DURATION = 60  // seconds per candle
+const MAX_ACTIVE_CANDLES = 1
+const CANDLE_DURATION = 45  // seconds per candle
 
 // 🕯️ Candle data
 type CandleState = {

@@ -5,6 +5,7 @@ import * as utils from '@dcl-sdk/utils'
 import { creaky, heart, whisper, wind } from "./utils";
 import { portalLight } from "./landscape";
 import { fadeTransition } from "./ui";
+import { createCandle } from "./candle";
 // Global reference to the grim reaper boat entity
 let grimReaperBoat: Entity | null = null
 
@@ -22,6 +23,17 @@ const candles: Entity[] = []
 const ghosts: Entity[] = []
 
 export function createGrimReaperBoatScene() {
+
+
+    //purposeless candles - just ot float by
+
+    for (let i = 0; i < 5; i++) {
+        const x = Math.random() * 84 - 42  // -42 → 42
+        const z = Math.random() * 84 - 42  // -42 → 42
+        createCandle(Vector3.create(x, 0.3, z))
+    }
+    console.log("Random candles created")
+    
     addSounds()
     addWalls()
     addSkeletons()
@@ -561,7 +573,7 @@ function addGhostBillboards() {
         
         // Load the ghost GLB model
         GltfContainer.createOrReplace(ghost, {
-            src: "models/ghost.glb"
+            src: "models/ghost2.glb"
         })
 
         // Position and scale the ghost

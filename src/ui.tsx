@@ -136,7 +136,7 @@ const uiComponent = () => (
             }}
           >
             <Label
-              value="FEVERED DREAM"
+              value="FEVER DREAM"
               fontSize={36}
               color={Color4.create(1, 1, 1, 1)}
               uiTransform={{ 
@@ -156,7 +156,7 @@ const uiComponent = () => (
               }}
             >
               <Label
-                value="Welcome to the Fevered Dream experience."
+                value="Welcome to the Fever Dream experience."
                 fontSize={18}
                 color={Color4.create(1, 1, 1, 1)}
                 uiTransform={{ 
@@ -176,7 +176,7 @@ const uiComponent = () => (
                 }}
               />
               <Label
-                value="the weeping angels guard the darkness. Light candles to"
+                value="the weeping angels guard the darkness. The lit candle"
                 fontSize={16}
                 color={Color4.create(0.9, 0.9, 0.9, 1)}
                 uiTransform={{ 
@@ -186,7 +186,7 @@ const uiComponent = () => (
                 }}
               />
               <Label
-                value="keep the angels at bay, but when the light"
+                value="keeps the angels at bay, but when the light"
                 fontSize={16}
                 color={Color4.create(0.9, 0.9, 0.9, 1)}
                 uiTransform={{ 
@@ -196,7 +196,7 @@ const uiComponent = () => (
                 }}
               />
               <Label
-                value="fades, they will hunt you down. But have no fear.  Your journey will"
+                value="fades, they will hunt you down. But have no fear. Journey"
                 fontSize={16}
                 color={Color4.create(0.9, 0.9, 0.9, 1)}
                 uiTransform={{ 
@@ -206,7 +206,7 @@ const uiComponent = () => (
                 }}
               />
               <Label
-                value="take you through four different stages. Just explore and"
+                value="through four different areas. Just explore and see if"
                 fontSize={16}
                 color={Color4.create(0.9, 0.9, 0.9, 1)}
                 uiTransform={{ 
@@ -216,7 +216,7 @@ const uiComponent = () => (
                 }}
               />
               <Label
-                value="see if you can reach the end."
+                value="you can reach the end. When in doubt always light the candles. "
                 fontSize={16}
                 color={Color4.create(0.9, 0.9, 0.9, 1)}
                 uiTransform={{ 
