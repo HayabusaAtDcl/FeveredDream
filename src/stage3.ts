@@ -193,10 +193,10 @@ export function cleanupStage3() {
     }
     
     // Turn off portal light and reset its parent
-    LightSource.getMutable(portalLight).active = false
-    const portalTransform = Transform.getMutable(portalLight)
-    portalTransform.parent = undefined // Remove parent reference
-    portalTransform.position = Vector3.create(0, 0, 0) // Reset position
+    //LightSource.getMutable(portalLight).active = false
+    //const portalTransform = Transform.getMutable(portalLight)
+    //portalTransform.parent = undefined // Remove parent reference
+    //portalTransform.position = Vector3.create(0, 0, 0) // Reset position
     
     console.log("Stage3 cleanup completed")
 }

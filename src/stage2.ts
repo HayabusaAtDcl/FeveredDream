@@ -550,6 +550,13 @@ function addSounds(){
 function addGhostBillboards() {
     // Define two clusters of ghosts along the boat path
     // Boat travels from x: -60 to x: 60, at y: 2
+
+    const animationOptions = [
+        "Idle_4",
+       // "Idle_4", 
+        "Axe_Breathe_and_Look_Around",
+        "Idle_12"
+    ]
     
     // Cluster 1: 3 ghosts (on the left side of path, early in journey)
     const cluster1Data = [
@@ -558,10 +565,12 @@ function addGhostBillboards() {
         { position: Vector3.create(-28, 3.5, 19), scale: Vector3.create(2.5, 3, 1.5) } // Medium-large ghost, lower - moved from z: 12 to z: 19
     ]
     
-    // Cluster 2: 2 ghosts (on the right side of path, later in journey)
+    // Cluster 2: 4 ghosts (on the right side of path, later in journey)
     const cluster2Data = [
-        { position: Vector3.create(25, 5, -18), scale: Vector3.create(3.5, 4.5, 1) }, // Large ghost - moved from z: -10 to z: -18
-        { position: Vector3.create(27, 6.5, -19), scale: Vector3.create(2, 2.5, 1) }  // Small ghost, higher - moved from z: -11 to z: -19
+        { position: Vector3.create(20, 5, -15), scale: Vector3.create(3, 4, 1.5) }, // Large ghost - left side of cluster
+        
+        { position: Vector3.create(30, 4, -20), scale: Vector3.create(2.5, 3.5, 1.2) }, // Medium ghost - right side
+        { position: Vector3.create(28, 7, -16), scale: Vector3.create(2, 2.5, 1) }  // Small ghost, higher - back of cluster
     ]
 
     // Combine both clusters
@@ -575,6 +584,23 @@ function addGhostBillboards() {
         GltfContainer.createOrReplace(ghost, {
             src: "models/ghost3.glb"
         })
+
+        const animation = animationOptions[Math.floor(Math.random() * animationOptions.length)]
+        Animator.createOrReplace(ghost, {
+            states: [
+                {
+                    clip: animation,
+                    playing: false,
+                    loop: true,
+                    weight: 1.0
+                }
+            ]
+        })
+
+        // Start animation after a small delay to ensure GLTF is loaded
+        utils.timers.setTimeout(() => {
+            Animator.getClip(ghost, animation).playing = true
+        }, 100)
 
         // Position and scale the ghost
         Transform.createOrReplace(ghost, {

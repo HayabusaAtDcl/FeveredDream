@@ -4,7 +4,7 @@ import { movePlayerTo } from "~system/RestrictedActions";
 import * as utils from '@dcl-sdk/utils'
 import { angry, creaky, dungeon, final, heart, whisper } from "./utils";
 import { showEndScreen } from './ui';
-import { shrinkFog } from "./landscape";
+import { portalLight, shrinkFog } from "./landscape";
 
 
 let rock: Entity | null = null
@@ -382,7 +382,7 @@ function createCandles() {
 
                         })
 
-
+                        LightSource.getMutable(portalLight).active = false
                         const light = engine.addEntity();
                     
                         Transform.create(light, {

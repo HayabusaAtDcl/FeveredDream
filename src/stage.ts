@@ -227,7 +227,7 @@ export class Stage  {
     //------------
     create_pillar_instances() {
 
-        for ( let i = 0 ; i < 4 ; i++ ) {
+        for ( let i = 0 ; i < 12 ; i++ ) {  // Increased from 4 to 12 for more angels
             let fl = this.create_pillar_entity( 0, -15 , 0, 4, 4, 4 );
             fl.used = false;
             this.pillars.push( fl );
