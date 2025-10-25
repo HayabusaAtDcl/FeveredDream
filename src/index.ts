@@ -1,30 +1,38 @@
-// We define the empty imports so the auto-complete feature works as expected.
+import { engine } from '@dcl/sdk/ecs'
+import { GameManager } from './core/GameManager'
+import { setupUi } from './ui'
+import { addFog, setLight } from './landscape'
+import { playRandomAmbienceLoop } from './ambience'
 
-import { SetStage1Scene } from './stage'
-import { addFog, setLight } from './landscape';
-import {  playRandomAmbienceLoop } from './ambience';
-import { setupUi } from './ui';
-import { createStage3Scene } from './stage3';
-import { createStage4Scene } from './stage4';
-import { createGrimReaperBoatScene } from './stage2';
-import { engine, Transform, GltfContainer, VideoPlayer, GltfNodeModifiers, Material, MaterialTransparencyMode, Billboard, BillboardMode } from '@dcl/sdk/ecs';
-import { Quaternion, Vector3 } from '@dcl/sdk/math';
+// Initialize game manager
+const gameManager = GameManager.getInstance()
 
 export function main() {
-
-
-    // Initialize UI
+  console.log('Initializing Fever Dream experience...')
+  
+  try {
+    // Initialize core systems
     setupUi()
-
     setLight()
-    
-    // start playing
+    addFog()
     playRandomAmbienceLoop()
-    addFog();
     
-    //createGrimReaperBoatScene()
-    //return;
-
-    //return;;
-    SetStage1Scene()
+    // Initialize game manager
+    gameManager.initialize().then(() => {
+      // Start the game
+      gameManager.startGame()
+      
+      // Set up game update system
+      engine.addSystem((dt: number) => {
+        gameManager.update(dt)
+      })
+      
+      console.log('Fever Dream experience initialized successfully')
+    }).catch((error) => {
+      console.error('Failed to initialize game:', error)
+    })
+    
+  } catch (error) {
+    console.error('Failed to start main function:', error)
+  }
 }

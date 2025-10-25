@@ -17,7 +17,7 @@ export function setGameOver(){
 }
 // 🔥 Candle config
 const MAX_ACTIVE_CANDLES = 1
-const CANDLE_DURATION = 45  // seconds per candle
+const CANDLE_DURATION = 5  // seconds per candle
 
 // 🕯️ Candle data
 type CandleState = {

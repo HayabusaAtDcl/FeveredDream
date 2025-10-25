@@ -1,9 +1,9 @@
-import {
-  engine,
-} from '@dcl/sdk/ecs'
+import { engine } from '@dcl/sdk/ecs'
 import { Color4 } from '@dcl/sdk/math'
-import ReactEcs, { Label, ReactEcsRenderer, UiEntity, Button } from '@dcl/sdk/react-ecs'
+import ReactEcs, { ReactEcsRenderer, UiEntity } from '@dcl/sdk/react-ecs'
 import * as utils from '@dcl-sdk/utils'
+import { StartScreen, EndScreen, FadeTransition, LoadingScreen } from './ui/components/UIComponents'
+import { GameManager } from './core/GameManager'
 
 // Global state for UI
 let showEndUI = false
@@ -14,6 +14,7 @@ let gameStarted = false
 // Fade transition state
 let showFade = false
 let fadeOpacity = 0
+
 
 export function setupUi() {
   ReactEcsRenderer.setUiRenderer(uiComponent)
@@ -93,218 +94,32 @@ export function fadeTransition(onTransition: () => void): Promise<void> {
   })
 }
 
-const uiComponent = () => (
-  <UiEntity
-    uiTransform={{
-      width: '100%',
-      height: '100%'
-    }}
-  >
-    {/* Start Screen */}
-    {showStartUI && (
-      <UiEntity
-        uiTransform={{
-          width: '100%',
-          height: '100%',
-          positionType: 'absolute',
-          position: { top: 0, left: 0 }
-        }}
-        uiBackground={{ 
-          color: Color4.create(0, 0, 0, 0.8) // Semi-transparent black
-        }}
-      >
-        <UiEntity
-          uiTransform={{
-            width: '100%',
-            height: '100%',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <UiEntity
-            uiTransform={{
-              width: 600,
-              height: 400,
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: 20
-            }}
-            uiBackground={{ 
-              color: Color4.create(0.1, 0.1, 0.1, 0.9) // Dark background
-            }}
-          >
-            <Label
-              value="FEVER DREAM"
-              fontSize={36}
-              color={Color4.create(1, 1, 1, 1)}
-              uiTransform={{ 
-                width: '100%', 
-                height: 50,
-                margin: '20px 0'
-              }}
-            />
-            
-            <UiEntity
-              uiTransform={{
-                width: '100%',
-                height: 200,
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Label
-                value="Welcome to the Fever Dream experience."
-                fontSize={18}
-                color={Color4.create(1, 1, 1, 1)}
-                uiTransform={{ 
-                  width: '100%', 
-                  height: 30,
-                  margin: '10px 0'
-                }}
-              />
-              <Label
-                value="Your journey begins in a mysterious graveyard where"
-                fontSize={16}
-                color={Color4.create(0.9, 0.9, 0.9, 1)}
-                uiTransform={{ 
-                  width: '100%', 
-                  height: 25,
-                  margin: '5px 0'
-                }}
-              />
-              <Label
-                value="the weeping angels guard the darkness. The lit candle"
-                fontSize={16}
-                color={Color4.create(0.9, 0.9, 0.9, 1)}
-                uiTransform={{ 
-                  width: '100%', 
-                  height: 25,
-                  margin: '5px 0'
-                }}
-              />
-              <Label
-                value="keeps the angels at bay, but when the light"
-                fontSize={16}
-                color={Color4.create(0.9, 0.9, 0.9, 1)}
-                uiTransform={{ 
-                  width: '100%', 
-                  height: 25,
-                  margin: '5px 0'
-                }}
-              />
-              <Label
-                value="fades, they will hunt you down. But have no fear. Journey"
-                fontSize={16}
-                color={Color4.create(0.9, 0.9, 0.9, 1)}
-                uiTransform={{ 
-                  width: '100%', 
-                  height: 25,
-                  margin: '5px 0'
-                }}
-              />
-              <Label
-                value="through four different areas. Just explore and see if"
-                fontSize={16}
-                color={Color4.create(0.9, 0.9, 0.9, 1)}
-                uiTransform={{ 
-                  width: '100%', 
-                  height: 25,
-                  margin: '5px 0'
-                }}
-              />
-              <Label
-                value="you can reach the end. When in doubt always light the candles. "
-                fontSize={16}
-                color={Color4.create(0.9, 0.9, 0.9, 1)}
-                uiTransform={{ 
-                  width: '100%', 
-                  height: 25,
-                  margin: '5px 0'
-                }}
-              />
-            </UiEntity>
-            
-            <Button
-              value="BEGIN JOURNEY"
-              fontSize={18}
-              variant="primary"
-              uiTransform={{ 
-                width: 200, 
-                height: 50,
-                margin: '20px 0'
-              }}
-              onMouseDown={() => {
-                closeStartScreen()
-              }}
-            />
-          </UiEntity>
-        </UiEntity>
-      </UiEntity>
-    )}
-
-    {/* Fade Transition Overlay */}
-    {showFade && (
-      <UiEntity
-        uiTransform={{
-          width: '100%',
-          height: '100%',
-          positionType: 'absolute',
-          position: { top: 0, left: 0 },
-          display: 'flex'
-        }}
-        uiBackground={{ 
-          color: Color4.create(0, 0, 0, fadeOpacity) // Full black fade
-        }}
+const uiComponent = () => {
+  return (
+    <UiEntity
+      uiTransform={{
+        width: '100%',
+        height: '100%'
+      }}
+    >
+      {/* Start Screen */}
+      <StartScreen 
+        showStartUI={showStartUI} 
+        onStart={closeStartScreen} 
       />
-    )}
 
-    {/* End Screen Overlay */}
-    {showEndUI && (
-      <UiEntity
-        uiTransform={{
-          width: '100%',
-          height: '100%',
-          positionType: 'absolute',
-          position: { top: 0, left: 0 }
-        }}
-        uiBackground={{ 
-          color: Color4.create(0, 0, 0, endUIOpacity * 0.9) // Black with fade
-        }}
-      >
-        <UiEntity
-          uiTransform={{
-            width: '100%',
-            height: '100%',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <Label
-            value="THE END"
-            fontSize={48}
-            color={Color4.create(1, 1, 1, endUIOpacity)} // White text
-            uiTransform={{ 
-              width: '100%', 
-              height: 60,
-              margin: '20px 0'
-            }}
-          />
-          <Label
-            value="Thank you for visiting!"
-            fontSize={24}
-            color={Color4.create(1, 1, 1, endUIOpacity)}
-            uiTransform={{ 
-              width: '100%', 
-              height: 40,
-              margin: '10px 0'
-            }}
-          />
-        </UiEntity>
-      </UiEntity>
-    )}
-  </UiEntity>
-)
+      {/* Fade Transition Overlay */}
+      <FadeTransition 
+        showFade={showFade} 
+        fadeOpacity={fadeOpacity} 
+      />
+
+      {/* End Screen Overlay */}
+      <EndScreen 
+        showEndUI={showEndUI} 
+        endUIOpacity={endUIOpacity} 
+      />
+
+    </UiEntity>
+  )
+}

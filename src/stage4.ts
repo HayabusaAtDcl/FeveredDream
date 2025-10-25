@@ -14,6 +14,7 @@ let skeletons: Entity[] = []
 let candles: Entity[] = []
 let sign: Entity | null = null
 let thirdPersonArea: Entity | null = null
+let fireGroundTiles: Entity[] = []
 export function createStage4Scene() {
     console.log("Creating stage4 scene...")
     addSounds()
@@ -204,6 +205,16 @@ export function cleanupStage4() {
         }
     }
     candles.length = 0 // Clear the array
+    
+    // Remove all fire ground tiles
+    for (const tile of fireGroundTiles) {
+        try {
+            engine.removeEntity(tile)
+        } catch (e) {
+            // Entity might already be removed
+        }
+    }
+    fireGroundTiles.length = 0 // Clear the array
     
     // Remove skull pile
     if (skullPile) {

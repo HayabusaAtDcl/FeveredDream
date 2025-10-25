@@ -553,15 +553,15 @@ function addGhostBillboards() {
     
     // Cluster 1: 3 ghosts (on the left side of path, early in journey)
     const cluster1Data = [
-        { position: Vector3.create(-30, 7, 11), scale: Vector3.create(3, 4, 2) },    // Large ghost
-        { position: Vector3.create(-32, 3, 10), scale: Vector3.create(3, 4, 2) },  // Medium ghost, higher
-        { position: Vector3.create(-28, 3.5, 12), scale: Vector3.create(2.5, 3, 1.5) } // Medium-large ghost, lower
+        { position: Vector3.create(-30, 7, 18), scale: Vector3.create(3, 4, 2) },    // Large ghost - moved from z: 11 to z: 18
+        { position: Vector3.create(-32, 3, 17), scale: Vector3.create(3, 4, 2) },  // Medium ghost, higher - moved from z: 10 to z: 17
+        { position: Vector3.create(-28, 3.5, 19), scale: Vector3.create(2.5, 3, 1.5) } // Medium-large ghost, lower - moved from z: 12 to z: 19
     ]
     
     // Cluster 2: 2 ghosts (on the right side of path, later in journey)
     const cluster2Data = [
-        { position: Vector3.create(25, 5, -10), scale: Vector3.create(3.5, 4.5, 1) }, // Large ghost
-        { position: Vector3.create(27, 6.5, -11), scale: Vector3.create(2, 2.5, 1) }  // Small ghost, higher
+        { position: Vector3.create(25, 5, -18), scale: Vector3.create(3.5, 4.5, 1) }, // Large ghost - moved from z: -10 to z: -18
+        { position: Vector3.create(27, 6.5, -19), scale: Vector3.create(2, 2.5, 1) }  // Small ghost, higher - moved from z: -11 to z: -19
     ]
 
     // Combine both clusters
@@ -573,7 +573,7 @@ function addGhostBillboards() {
         
         // Load the ghost GLB model
         GltfContainer.createOrReplace(ghost, {
-            src: "models/ghost2.glb"
+            src: "models/ghost3.glb"
         })
 
         // Position and scale the ghost
