@@ -45,8 +45,15 @@ export const  final = engine.addEntity()
 Transform.create(final)
 AudioSource.create(final, { audioClipUrl: 'sounds/final.mp3',  playing: false, loop: true, global: true, volume: 1 })
 
-
+export const cryWomanSound = engine.addEntity()
+Transform.create(cryWomanSound)
+AudioSource.create(cryWomanSound, { audioClipUrl: 'sounds/crygirl.mp3',  playing: false })
 
 export function generateRandomNumber(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+export enum WearableBodyShape {
+  MALE = 'urn:decentraland:off-chain:base-avatars:BaseMale',
+  FEMALE = 'urn:decentraland:off-chain:base-avatars:BaseFemale'
 }

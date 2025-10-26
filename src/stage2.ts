@@ -1,14 +1,17 @@
-import { engine, Entity, GltfContainer, Transform, Material, MeshRenderer, MeshCollider, ColliderLayer, EntityUtils, Tween, triggerAreaEventsSystem, TriggerArea, TweenLoop, EasingFunction, TweenSequence, Animator, VideoPlayer, AudioSource, pointerEventsSystem, InputAction, LightSource, GltfNodeModifiers, MaterialTransparencyMode, Billboard, BillboardMode, TextureWrapMode } from "@dcl/sdk/ecs";
+import { engine, Entity, GltfContainer, Transform, Material, MeshRenderer, MeshCollider, ColliderLayer, EntityUtils, Tween, triggerAreaEventsSystem, TriggerArea, TweenLoop, EasingFunction, TweenSequence, Animator, VideoPlayer, AudioSource, pointerEventsSystem, InputAction, LightSource, GltfNodeModifiers, MaterialTransparencyMode, Billboard, BillboardMode, TextureWrapMode, AvatarShape } from "@dcl/sdk/ecs";
 import { Vector3, Quaternion, Color3, Color4 } from "@dcl/sdk/math";
 import { movePlayerTo } from "~system/RestrictedActions";
 import * as utils from '@dcl-sdk/utils'
-import { creaky, heart, whisper, wind } from "./utils";
+import { creaky, cryWomanSound, heart, WearableBodyShape, whisper, wind } from "./utils";
 import { portalLight } from "./landscape";
 import { fadeTransition } from "./ui";
 import { createCandle } from "./candle";
 // Global reference to the grim reaper boat entity
 let grimReaperBoat: Entity | null = null
 
+// Global reference to the second boat with NPC
+let secondBoat: Entity | null = null
+let secondBoatNPC: Entity | null = null
 
 // Global reference to the darkness sphere from stage1
 
@@ -138,6 +141,15 @@ export function createGrimReaperBoatScene() {
         parent: skull
     })
 
+    const ls = LightSource.getMutable(portalLight);
+    ls.intensity = 500000;
+    ls.color = Color3.White()
+    
+    const mutableLs = Transform.getMutable(portalLight)
+    mutableLs.position = Vector3.create(70, 16, 0)
+    mutableLs.parent = undefined
+    ls.active = true
+
     
     const litCandles: Set<Entity> = new Set() // Track lit candles using a Set
     
@@ -211,14 +223,14 @@ export function createGrimReaperBoatScene() {
                     if (litCandles.size === totalCandles) {
                         console.log("All candles lit! Teleportation activated!")
 
-                        
                         const mutableLight = Transform.getMutable(portalLight)
                         mutableLight.position = Vector3.create(0, -0.55, 0.0) // Same as vortex position
                         mutableLight.parent = vortexStage2! // Parent to skull so it moves with it
                         
-                        
-                        LightSource.getMutable(portalLight).active = true
-                        
+                        const ls = LightSource.getMutable(portalLight);
+                        ls.intensity = 5333333;
+                        ls.color = Color3.Red();
+                        ls.active = true
                        
 
                         TriggerArea.setBox(vortexStage2!)
@@ -271,6 +283,8 @@ export function createGrimReaperBoatScene() {
         }),
     })
     
+    // Create the second boat with NPC
+    createSecondBoat()
     
     addGhostBillboards()
     // Initially position player on the boat
@@ -297,6 +311,67 @@ function movePlayerToBoat(){
     })  
 }
 
+function createSecondBoat() {
+    console.log("Creating second boat with NPC...")
+    
+    // Create the second boat entity
+    secondBoat = engine.addEntity()
+    GltfContainer.createOrReplace(secondBoat, {
+        src: 'models/grimreaper.glb', // Using same model as main boat
+        visibleMeshesCollisionMask: ColliderLayer.CL_PHYSICS,
+        invisibleMeshesCollisionMask: ColliderLayer.CL_NONE
+    })
+    
+    // Position the second boat in the middle of the path, stationary
+    Transform.createOrReplace(secondBoat, {
+        position: Vector3.create(0, 2, 8), // Middle of the path, 8 units to the side
+        scale: Vector3.create(3, 3, 3),
+        rotation: Quaternion.fromEulerDegrees(0, -90, 0) // Face left
+    })
+    
+    // Create NPC on the second boat
+    createNPCOnBoat()
+}
+
+function createNPCOnBoat() {
+    // Create the NPC entity
+    secondBoatNPC = engine.addEntity()
+    
+    // Create NPC with basic appearance and x wearable
+    AvatarShape.createOrReplace(secondBoatNPC, {
+        id: '',
+        emotes: ['cry'],
+        wearables: [
+          'urn:decentraland:matic:collections-v2:0x253dc2bf5817f7043bc1f6a5bf85e805ec108df4:0'
+        ],
+        bodyShape: WearableBodyShape.FEMALE,
+        expressionTriggerId: 'cry'
+      })
+    
+    // Position the NPC on the boat
+    Transform.createOrReplace(secondBoatNPC, {
+        position: Vector3.create(0, -1, -0.6), // Lower on the boat deck
+        scale: Vector3.create(.7,.7,.7),
+        rotation: Quaternion.fromEulerDegrees(0, 180, 0), // Face the opposite direction
+        parent: secondBoat! // Parent to the boat so it moves with it
+    })
+    
+
+    utils.timers.setInterval(function () {
+        const npc = AvatarShape.getMutable(secondBoatNPC!);
+      
+        npc.emotes = ["cry"]
+        npc.expressionTriggerId = "cry"
+        npc.expressionTriggerTimestamp = Math.round(+new Date() / 1000)
+        
+        Transform.getMutable(cryWomanSound).position = Transform.get(secondBoatNPC!).position
+        AudioSource.getMutable(cryWomanSound).playing = true
+         
+        
+      }, 8000)
+    console.log("Second boat NPC created with crying emote")
+}
+
 export function cleanupGrimReaperBoatScene() {
     console.log("Cleaning up grim reaper boat scene...")
    
@@ -309,6 +384,25 @@ export function cleanupGrimReaperBoatScene() {
             // Entity might already be removed
         }
         grimReaperBoat = null
+    }
+    
+    // Remove the second boat and NPC
+    if (secondBoatNPC) {
+        try {
+            engine.removeEntity(secondBoatNPC)
+        } catch (e) {
+            // Entity might already be removed
+        }
+        secondBoatNPC = null
+    }
+    
+    if (secondBoat) {
+        try {
+            engine.removeEntity(secondBoat)
+        } catch (e) {
+            // Entity might already be removed
+        }
+        secondBoat = null
     }
     
     
