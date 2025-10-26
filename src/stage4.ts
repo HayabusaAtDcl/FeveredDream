@@ -282,8 +282,9 @@ export function cleanupStage4() {
     LightSource.getMutable(portalLight).active = false
     LightSource.getMutable(foglight).active = false
 
-    engine.removeEntity(darkness_sphere)
-    engine.removeSystem(fogRotationSystem)
+    //engine.removeEntity(darkness_sphere)
+    //engine.removeSystem(fogRotationSystem)
+
     AudioSource.getMutable(angry).playing = false;
     AudioSource.getMutable(angry).loop = false;
 

@@ -194,17 +194,24 @@ export function createStage5Scene() {
     }, timeline)
 
     // 5s - Trigger emote (2s + 3s)
-    timeline += 3000
+    timeline += 2500
     utils.timers.setTimeout(() => {
-        triggerSceneEmote({ src: 'animations/nap_emote.glb', loop: false })
+        triggerSceneEmote({ src: 'animations/nap_emote.glb', loop: true })
     }, timeline)
 
     // 15s - Fade in (2s)
-    timeline += 1000
+    timeline +=  2500
     utils.timers.setTimeout(() => {
         fadeIn()
     }, timeline)
 
+
+    timeline += 10000
+    utils.timers.setTimeout(() => {
+        triggerSceneEmote({ src: 'animations/naploop_emote.glb', loop: true })
+    }, timeline)
+
+    
 
     
     // 25s - Create giant NPC
@@ -300,21 +307,18 @@ function createGiantNpc(userData: any) {
         rotation: Quaternion.fromEulerDegrees(0, 180, 0)
     })
     
-
-
-    // Wait a bit for the NPC to load, then start the emote loop
-    utils.timers.setTimeout(() => {
-        const mutableAvatar = AvatarShape.getMutable(giantNPC!)
-        mutableAvatar.expressionTriggerId = 'animations/giant_emote.glb'
-        
-        // Set up the interval to keep triggering the emote
-        utils.timers.setInterval(() => {
-            if (giantNPC) {
-                const mutableAvatar = AvatarShape.getMutable(giantNPC)
-                mutableAvatar.expressionTriggerId = 'animations/giant_emote.glb'
-            }
-        }, 9000)
-    }, 2000) // Wait 2 seconds for NPC to fully load
+  
+    const mutableAvatar = AvatarShape.getMutable(giantNPC!)
+    mutableAvatar.expressionTriggerId = 'animations/giant_emote.glb'
+    
+    // Set up the interval to keep triggering the emote
+    utils.timers.setInterval(() => {
+        if (giantNPC) {
+            const mutableAvatar = AvatarShape.getMutable(giantNPC)
+            mutableAvatar.expressionTriggerId = 'animations/giant_emote.glb'
+        }
+    }, 5000)
+  
 
 
     
