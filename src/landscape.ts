@@ -2,8 +2,8 @@ import { Vector3, Quaternion, Color3 } from '@dcl/sdk/math'
 import { GltfContainer, LightSource, Transform, engine } from '@dcl/sdk/ecs'
 
 // Global references for fog control
-let darkness_sphere: any = null
-let fogRotationSystem: any = null
+export let darkness_sphere: any = null
+export let fogRotationSystem: any = null
 
 export function addFog(){
     const darkness_range = 10.5;

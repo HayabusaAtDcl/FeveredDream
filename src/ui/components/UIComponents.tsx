@@ -43,14 +43,14 @@ export const StartScreen = ({ showStartUI, onStart }: StartScreenProps) => {
         <UiEntity
           uiTransform={{
             width: 600,
-            height: 400,
+            height: 480, // Increased from 400 to 480
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: 20
           }}
           uiBackground={{ 
-            color: Color4.create(0.1, 0.1, 0.1, 0.9) // Dark background
+            color: Color4.create(0.1, 0.1, 0.1, 0.9)
           }}
         >
           <Label
@@ -67,30 +67,42 @@ export const StartScreen = ({ showStartUI, onStart }: StartScreenProps) => {
           <UiEntity
             uiTransform={{
               width: '100%',
-              height: 200,
+              height: 280, // Increased from 200 to 280 to accommodate more text
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center'
             }}
           >
             <Label
-              value="Welcome to the Fever Dream experience."
+              value="Welcome to the Fever Dream experience. "
               fontSize={18}
               color={Color4.create(1, 1, 1, 1)}
               uiTransform={{ 
                 width: '100%', 
                 height: 30,
-                margin: '10px 0'
+                margin: '8px 0' // Reduced margin slightly
               }}
             />
+
+          <Label
+              value="Please keep UI on for better immersion and transitioning."
+              fontSize={16}
+              color={Color4.create(0.9, 0.9, 0.9, 1)}
+              uiTransform={{ 
+                width: '100%', 
+                height: 32, // Reduced height slightly
+                margin: '4px 0' // Reduced margin
+              }}
+            />
+
             <Label
               value="Your journey begins in a mysterious graveyard where"
               fontSize={16}
               color={Color4.create(0.9, 0.9, 0.9, 1)}
               uiTransform={{ 
                 width: '100%', 
-                height: 25,
-                margin: '5px 0'
+                height: 22, // Reduced height slightly
+                margin: '4px 0' // Reduced margin
               }}
             />
             <Label
@@ -99,8 +111,8 @@ export const StartScreen = ({ showStartUI, onStart }: StartScreenProps) => {
               color={Color4.create(0.9, 0.9, 0.9, 1)}
               uiTransform={{ 
                 width: '100%', 
-                height: 25,
-                margin: '5px 0'
+                height: 22,
+                margin: '4px 0'
               }}
             />
             <Label
@@ -109,38 +121,51 @@ export const StartScreen = ({ showStartUI, onStart }: StartScreenProps) => {
               color={Color4.create(0.9, 0.9, 0.9, 1)}
               uiTransform={{ 
                 width: '100%', 
-                height: 25,
-                margin: '5px 0'
+                height: 22,
+                margin: '4px 0'
               }}
             />
             <Label
-              value="fades, they will hunt you down. But have no fear. Journey"
+              value="fades, they will hunt you down."
               fontSize={16}
               color={Color4.create(0.9, 0.9, 0.9, 1)}
               uiTransform={{ 
                 width: '100%', 
-                height: 25,
-                margin: '5px 0'
+                height: 22,
+                margin: '4px 0'
               }}
             />
-            <Label
-              value="through four different areas. Just explore and see if"
+
+          <Label
+              value="Have no fear. Journey through"
               fontSize={16}
               color={Color4.create(0.9, 0.9, 0.9, 1)}
               uiTransform={{ 
                 width: '100%', 
-                height: 25,
-                margin: '5px 0'
+                height: 22,
+                margin: '4px 0'
               }}
-            />
+            />          
+
             <Label
-              value="you can reach the end. When in doubt always light the candles. "
+              value="until you reach the end (It will say so!)"
               fontSize={16}
               color={Color4.create(0.9, 0.9, 0.9, 1)}
               uiTransform={{ 
                 width: '100%', 
-                height: 25,
-                margin: '5px 0'
+                height: 22,
+                margin: '4px 0'
+              }}
+            />          
+
+          <Label
+              value="When in doubt just light the candles."
+              fontSize={16}
+              color={Color4.create(0.9, 0.9, 0.9, 1)}
+              uiTransform={{ 
+                width: '100%', 
+                height: 22,
+                margin: '4px 0'
               }}
             />
           </UiEntity>

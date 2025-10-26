@@ -2,9 +2,10 @@ import { engine, Entity, GltfContainer, Transform, ColliderLayer, Animator, poin
 import { Vector3, Quaternion, Color3 } from "@dcl/sdk/math";
 import { movePlayerTo } from "~system/RestrictedActions";
 import * as utils from '@dcl-sdk/utils'
-import { angry, creaky, dungeon, final, heart, whisper } from "./utils";
-import { showEndScreen } from './ui';
-import { portalLight, shrinkFog } from "./landscape";
+import { angry, creaky, dungeon, final, heart, whisper, wind } from "./utils";
+import { fadeOut, fadeTransition, showEndScreen } from './ui';
+import { darkness_sphere, foglight, fogRotationSystem, portalLight, shrinkFog } from "./landscape";
+import { killAmbience } from "./ambience";
 
 
 let rock: Entity | null = null
@@ -13,7 +14,7 @@ let dozey: Entity| null = null
 let skeletons: Entity[] = []
 let candles: Entity[] = []
 let sign: Entity | null = null
-let thirdPersonArea: Entity | null = null
+
 let fireGroundTiles: Entity[] = []
 export function createStage4Scene() {
     console.log("Creating stage4 scene...")
@@ -164,6 +165,7 @@ function addSounds(){
 
 
 export function cleanupStage4() {
+    killAmbience();
     console.log("Cleaning up stage4...")
     
     // Remove rock (this will also remove skull pile and dozey as children)
@@ -237,10 +239,9 @@ export function cleanupStage4() {
     }
     
    
-    // Remove all GltfContainer entities (fallback cleanup)
-    // Remove only stage3-specific GltfContainer entities
-    // Keep fog.glb and any other persistent models
     const allGltfEntities = engine.getEntitiesWith(GltfContainer)
+    const entitiesToRemove: Entity[] = [] // Collect entities to remove first
+
     for (const [entity] of allGltfEntities) {
         try {
             const gltf = GltfContainer.get(entity)
@@ -250,31 +251,60 @@ export function cleanupStage4() {
                 gltf.src === 'models/skeleton.glb' ||
                 gltf.src === 'models/sign.glb' ||
                 gltf.src === 'models/candle.glb') {
-                engine.removeEntity(entity)
+                entitiesToRemove.push(entity) // Add to removal list instead of removing immediately
             }
             // Keep fog.glb, fence.glb, and other persistent models
         } catch (e) {
             // Entity might already be removed
         }
     }
-    
-    // Remove third-person camera area
-    if (thirdPersonArea) {
+
+    // Now remove all collected entities
+    for (const entity of entitiesToRemove) {
         try {
-            engine.removeEntity(thirdPersonArea)
+            engine.removeEntity(entity)
         } catch (e) {
             // Entity might already be removed
         }
-        thirdPersonArea = null
     }
     
+   for (const angel of angels) {
+        if (angel) {
+            try {
+                engine.removeEntity(angel)
+            } catch (e) {
+                // Entity might already be removed
+            }
+        }
+    }
+    angels.length = 0
+
+    LightSource.getMutable(portalLight).active = false
+    LightSource.getMutable(foglight).active = false
+
+    engine.removeEntity(darkness_sphere)
+    engine.removeSystem(fogRotationSystem)
+    AudioSource.getMutable(angry).playing = false;
+    AudioSource.getMutable(angry).loop = false;
+
+    AudioSource.getMutable(heart).playing = false;
+    AudioSource.getMutable(heart).loop = false;
+
+    AudioSource.getMutable(wind).playing = false;
+    AudioSource.getMutable(wind).loop = false;
+
+    AudioSource.getMutable(whisper).playing = false;
+    AudioSource.getMutable(whisper).loop = false;
+
+    AudioSource.getMutable(final).playing = false;
+    AudioSource.getMutable(final).loop = false;
     console.log("Stage4 cleanup completed")
 }
 
 function createCandles() {
     // Create 60 candles around the dozey area
 
-    const totalCandles = 40
+    const totalCandles = 40; 
     const candleRadius = 14 // Distance from dozey
     
     const litCandles: Set<Entity> = new Set() // Track lit candles using a Set
@@ -352,22 +382,35 @@ function createCandles() {
                         AudioSource.getMutable(final).playing = false
 
 
-                        utils.timers.setTimeout(()=>{
+                        // Timeline: Start from when this function is called
+                        let timeline = 0
+
+                        // Immediate - Stop angry animation, start scream
+                        utils.timers.setTimeout(() => {
                             Animator.getClip(dozey!, 'Angry_To_Tantrum_Sit').playing = false;
                             Animator.getClip(dozey!, 'Zombie_Scream').playing = true;
-                            utils.timers.setTimeout(()=>{
+                        }, timeline)
+
+                        // 5s - Spawn angels
+                        timeline += 5000
+                        utils.timers.setTimeout(() => {
+                            spawnAngels()
+                        }, timeline)
+
+                        // 30s - Transition to stage5 (5s + 25s)
+                        timeline += 15000
+                        utils.timers.setTimeout(() => {                            
+                            fadeOut(() => {
+                                    // Clean up stage4 while screen is black
+                                cleanupStage4()
                                 
-                                
-                                spawnAngels()
-                                
-                                
-                                // After UI shows, clean up and go back to stage1
-                                utils.timers.setTimeout(() => {
-                                    // Show the end screen
-                                    showEndScreen()
-                                }, 25000) // Wait 25 seconds for UI to show, then transition
-                            }, 5000)
-                        }, 5000)
+                                // Import and create stage5
+                                import('./stage5').then((stage5) => {
+                                    stage5.createStage5Scene()
+
+                                })
+                            })
+                        }, timeline)
                   
                        
                         utils.tweens.startScaling(

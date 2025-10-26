@@ -23,7 +23,7 @@ export interface GameState {
   currentStage: StageType
 }
 
-export type StageType = 'stage1' | 'stage2' | 'stage3' | 'stage4'
+export type StageType = 'stage1' | 'stage2' | 'stage3' | 'stage4' | 'stage5'
 
 // ============================================================================
 // STAGE TYPES

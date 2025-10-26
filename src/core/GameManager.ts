@@ -22,7 +22,7 @@ export class GameManager {
   private gameState: GameState
   private config: GameConfig
   private isInitialized: boolean = false
-  private updateSystems: Array<() => void> = []
+
 
   constructor() {
     this.entityManager = EntityManager.getInstance()
@@ -70,8 +70,6 @@ export class GameManager {
       this.audioManager = AudioManager.getInstance()
       this.errorHandler = ErrorHandler.getInstance()
 
-      // Set up update systems
-      this.setupUpdateSystems()
 
       // Initialize stage manager
       this.stageManager.initialize()
@@ -84,19 +82,6 @@ export class GameManager {
     }
   }
 
-  /**
-   * Set up update systems
-   */
-  private setupUpdateSystems(): void {
-    // Health check system
-    const healthCheckSystem = () => {
-      if (!this.errorHandler.isSystemHealthy()) {
-        console.log('System health issues detected')
-      }
-    }
-
-    this.updateSystems.push(healthCheckSystem)
-  }
 
   /**
    * Start the game
@@ -196,21 +181,7 @@ export class GameManager {
     console.log('Game reset completed')
   }
 
-  /**
-   * Update game systems
-   */
-  public update(dt: number): void {
-    if (!this.isInitialized) return
-
-    try {
-      // Run update systems
-      for (const system of this.updateSystems) {
-        system()
-      }
-    } catch (error) {
-      this.errorHandler.log(error as Error, 'Game Update')
-    }
-  }
+ 
 
   /**
    * Get system statistics
@@ -255,8 +226,6 @@ export class GameManager {
     this.audioManager.cleanup()
     this.errorHandler.clearErrorLog()
     
-    // Clear update systems
-    this.updateSystems.length = 0
     
     this.isInitialized = false
     console.log('GameManager cleanup completed')

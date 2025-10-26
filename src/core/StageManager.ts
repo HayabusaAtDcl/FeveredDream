@@ -102,6 +102,9 @@ export class StageManager {
       case 'stage4':
         await this.loadStage4()
         break
+      case 'stage5':
+        await this.loadStage5()
+        break
       default:
         throw new Error(`Unknown stage: ${stage}`)
     }
@@ -139,6 +142,11 @@ export class StageManager {
     createStage4Scene()
   }
 
+  private async loadStage5(): Promise<void> {
+    const { createStage5Scene } = await import('../stage5')
+    createStage5Scene()
+  }
+
   /**
    * Clean up current stage
    */
@@ -162,7 +170,7 @@ export class StageManager {
       }
 
       // Clean up entity manager
-      this.entityManager.cleanup()
+      //this.entityManager.cleanup()
       
       console.log(`Cleaned up ${this.currentStage}`)
     } catch (error) {
@@ -215,7 +223,7 @@ export class StageManager {
       activateAngels: false,
       currentStage: 'stage1'
     }
-    this.entityManager.cleanup()
+    //this.entityManager.cleanup()
   }
 
   /**

@@ -121,9 +121,9 @@ export function candleSystem() {
     const anyActive = candles.some(c => c.active)
     activateAngels = !anyActive
 
-    if (activateAngels) {
-      console.log('😈 All candles out — activate angels!')
-    }
+    //if (activateAngels) {
+      //console.log('😈 All candles out — activate angels!')
+    //}
   }
 }
 

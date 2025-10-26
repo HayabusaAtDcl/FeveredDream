@@ -56,6 +56,45 @@ export function isGameStarted() {
   return gameStarted
 }
 
+export function fadeOut(onTransition:()=> void): Promise<void> {
+  return new Promise((resolve) => {
+      console.log("Starting fade out...")
+      showFade = true
+      fadeOpacity = 0
+      
+      const fadeOutSystem = (dt: number) => {
+          fadeOpacity += dt * 1 // Fade out over 1 second
+          if (fadeOpacity >= 1) {
+              fadeOpacity = 1
+              engine.removeSystem(fadeOutSystem)
+              console.log("Fade out complete")
+              resolve()
+          }
+      }
+      engine.addSystem(fadeOutSystem)
+      
+      onTransition()
+  })
+}
+
+export function fadeIn(): Promise<void> {
+  return new Promise((resolve) => {
+      console.log("Starting fade in...")
+      
+      const fadeInSystem = (dt: number) => {
+          fadeOpacity -= dt * 0.5 // Fade in over 2 seconds
+          if (fadeOpacity <= 0) {
+              fadeOpacity = 0
+              showFade = false
+              engine.removeSystem(fadeInSystem)
+              console.log("Fade in complete")
+              resolve()
+          }
+      }
+      engine.addSystem(fadeInSystem)
+  })
+}
+
 // Function to fade out, execute callback, then fade in
 export function fadeTransition(onTransition: () => void): Promise<void> {
   return new Promise((resolve) => {

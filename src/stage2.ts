@@ -19,11 +19,16 @@ let waterGround: Entity | null = null
 let skull: Entity | null = null
 
 let vortexStage2: Entity | null = null
-let wallparent: Entity | null = null
+let northWall: Entity | null = null
+let southWall: Entity | null = null
+let eastWall: Entity | null = null
+let westWall: Entity | null = null
 
 
 const candles: Entity[] = []
 const ghosts: Entity[] = []
+
+let boatGuyInterval = -1;
 
 export function createGrimReaperBoatScene() {
 
@@ -357,7 +362,7 @@ function createNPCOnBoat() {
     })
     
 
-    utils.timers.setInterval(function () {
+    boatGuyInterval = utils.timers.setInterval(function () {
         const npc = AvatarShape.getMutable(secondBoatNPC!);
       
         npc.emotes = ["cry"]
@@ -375,6 +380,19 @@ function createNPCOnBoat() {
 export function cleanupGrimReaperBoatScene() {
     console.log("Cleaning up grim reaper boat scene...")
    
+    // Remove all walls
+    if(northWall){
+        engine.removeEntity(northWall)
+    }
+    if(southWall){
+        engine.removeEntity(southWall)
+    }
+    if(eastWall){
+        engine.removeEntity(eastWall)
+    }
+    if(westWall){
+        engine.removeEntity(westWall)
+    }
     
     // Remove the boat entity
     if (grimReaperBoat) {
@@ -389,6 +407,7 @@ export function cleanupGrimReaperBoatScene() {
     // Remove the second boat and NPC
     if (secondBoatNPC) {
         try {
+            utils.timers.clearInterval(boatGuyInterval)
             engine.removeEntity(secondBoatNPC)
         } catch (e) {
             // Entity might already be removed
@@ -479,22 +498,13 @@ export function cleanupGrimReaperBoatScene() {
         vortexStage2 = null
     }
 
-    // Remove all walls
-    if (wallparent) {
-        try {
-            engine.removeEntityWithChildren(wallparent)
-        } catch (e) {
-            // Entity might already be removed
-        }
-        wallparent = null
-    }
+    
     
     console.log("Grim reaper boat scene cleanup completed")
 }
 
+
 function addWalls(){
-    // Create the parent entity for all walls
-    wallparent = engine.addEntity()
     
     // Create black walls around the water ground perimeter
     const waterScale = 200 // Your water ground scale
@@ -503,13 +513,8 @@ function addWalls(){
     const wallThickness = 2
 
     // North wall (top edge of water)
-    const northWall = engine.addEntity()
-    MeshRenderer.create(northWall, {
-        mesh: {
-            $case: 'box',
-            box: { uvs: [] },
-        },
-    })
+    northWall = engine.addEntity()
+    MeshRenderer.setBox(northWall)
     Material.setPbrMaterial(northWall, {
         albedoColor: Color4.create(0, 0, 0, 1), // Black
         specularIntensity: 0,
@@ -518,18 +523,13 @@ function addWalls(){
     })
     Transform.createOrReplace(northWall, {
         position: Vector3.create(0, wallHeight/2, halfScale), // Right at the edge
-        scale: Vector3.create(waterScale, wallHeight, wallThickness),
-        parent: wallparent
+        scale: Vector3.create(waterScale, wallHeight, wallThickness)
     })
 
     // South wall (bottom edge of water)
-    const southWall = engine.addEntity()
-    MeshRenderer.create(southWall, {
-        mesh: {
-            $case: 'box',
-            box: { uvs: [] },
-        },
-    })
+    southWall = engine.addEntity()
+    MeshRenderer.setBox(southWall);
+
     Material.setPbrMaterial(southWall, {
         albedoColor: Color4.create(0, 0, 0, 1), // Black
         specularIntensity: 0,
@@ -538,18 +538,13 @@ function addWalls(){
     })
     Transform.createOrReplace(southWall, {
         position: Vector3.create(0, wallHeight/2, -halfScale), // Right at the edge
-        scale: Vector3.create(waterScale, wallHeight, wallThickness),
-        parent: wallparent
+        scale: Vector3.create(waterScale, wallHeight, wallThickness)
     })
 
     // East wall (right edge of water)
-    const eastWall = engine.addEntity()
-    MeshRenderer.create(eastWall, {
-        mesh: {
-            $case: 'box',
-            box: { uvs: [] },
-        },
-    })
+    eastWall = engine.addEntity()
+    MeshRenderer.setBox(eastWall)
+
     Material.setPbrMaterial(eastWall, {
         albedoColor: Color4.create(0, 0, 0, 1), // Black
         specularIntensity: 0,
@@ -558,18 +553,13 @@ function addWalls(){
     })
     Transform.createOrReplace(eastWall, {
         position: Vector3.create(halfScale, wallHeight/2, 0), // Right at the edge
-        scale: Vector3.create(wallThickness, wallHeight, waterScale),
-        parent: wallparent
+        scale: Vector3.create(wallThickness, wallHeight, waterScale)
     })
 
     // West wall (left edge of water)
-    const westWall = engine.addEntity()
-    MeshRenderer.create(westWall, {
-        mesh: {
-            $case: 'box',
-            box: { uvs: [] },
-        },
-    })
+    westWall = engine.addEntity()
+    MeshRenderer.setBox(westWall);
+
     Material.setPbrMaterial(westWall, {
         albedoColor: Color4.create(0, 0, 0, 1), // Black
         specularIntensity: 0,
@@ -578,8 +568,7 @@ function addWalls(){
     })
     Transform.createOrReplace(westWall, {
         position: Vector3.create(-halfScale, wallHeight/2, 0), // Right at the edge
-        scale: Vector3.create(wallThickness, wallHeight, waterScale),
-        parent: wallparent
+        scale: Vector3.create(wallThickness, wallHeight, waterScale)
     })
 }
 

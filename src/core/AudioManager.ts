@@ -1,4 +1,4 @@
-import { engine, AudioSource, Transform } from '@dcl/sdk/ecs'
+import { engine, AudioSource, Transform, Entity } from '@dcl/sdk/ecs'
 import { AudioEntity, AudioManager as IAudioManager, AudioConfig } from '../types'
 
 /**
@@ -198,24 +198,39 @@ export class AudioManager implements IAudioManager {
    */
   public getPlayingCount(): number {
     let count = 0
-    for (const audioEntity of [...this.ambience, ...this.effects, ...this.music]) {
-      if (AudioSource.get(audioEntity.entity).playing) {
-        count++
-      }
+    const allAudioEntities = [...this.ambience, ...this.effects, ...this.music]
+    
+    for (const audioEntity of allAudioEntities) {
+        try {
+            if (AudioSource.get(audioEntity.entity).playing) {
+                count++
+            }
+        } catch (error) {
+            // Entity might have been removed
+            console.log('Audio entity not found during count:', error)
+        }
     }
     return count
-  }
+}
 
   /**
    * Clean up all audio entities
    */
   public cleanup(): void {
+    // Collect all entities to remove first
+    const entitiesToRemove: Entity[] = []
+    
     for (const audioEntity of [...this.ambience, ...this.effects, ...this.music]) {
-      try {
-        engine.removeEntity(audioEntity.entity)
-      } catch (error) {
-        console.log('Failed to remove audio entity:', error)
-      }
+        entitiesToRemove.push(audioEntity.entity)
+    }
+    
+    // Now remove all entities
+    for (const entity of entitiesToRemove) {
+        try {
+            engine.removeEntity(entity)
+        } catch (error) {
+            console.log('Failed to remove audio entity:', error)
+        }
     }
 
     this.ambience.length = 0
@@ -225,7 +240,7 @@ export class AudioManager implements IAudioManager {
     this.isInitialized = false
 
     console.log('AudioManager cleaned up')
-  }
+}
 
   /**
    * Get audio statistics

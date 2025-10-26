@@ -4,7 +4,10 @@ import { amb1, amb2, amb3, amb4, generateRandomNumber } from './utils'
 // list of ambience sounds
 const ambSounds = [amb1, amb2, amb3, amb4]
 
-
+export let killAmbienceFlag = false
+export function killAmbience(){
+  killAmbienceFlag = true;
+}
 // helper to stop all
 function stopAll() {
   for (const amb of ambSounds) {
@@ -36,6 +39,8 @@ export async function playRandomAmbienceLoop() {
 
 
   utils.timers.setTimeout(()=> {
+
+    if(killAmbienceFlag) return;
   // recurse to play next one
    playRandomAmbienceLoop()
   },  (clipDuration + gap) * 1000)
