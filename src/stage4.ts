@@ -399,7 +399,7 @@ function createCandles() {
                         }, timeline)
 
                         // 30s - Transition to stage5 (5s + 25s)
-                        timeline += 15000
+                        timeline += 25000
                         utils.timers.setTimeout(() => {                            
                             fadeOut(() => {
                                     // Clean up stage4 while screen is black

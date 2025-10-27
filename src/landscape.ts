@@ -9,7 +9,7 @@ export function addFog(){
     const darkness_range = 10.5;
     darkness_sphere = engine.addEntity()
     GltfContainer.createOrReplace(darkness_sphere, {
-        src: 'models/fog.glb'
+        src: 'models/fog-update.glb'
     })
 
     Transform.createOrReplace(darkness_sphere,

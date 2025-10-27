@@ -289,16 +289,15 @@ function createGiantNpc(userData: any) {
     
     AvatarShape.createOrReplace(giantNPC, {
         id: '',
-        emotes:['animations/giant_emote.glb'],
+        emotes:[],
         wearables: userData.data?.avatar?.wearables || [],
         bodyShape: userData.data?.avatar?.bodyShape,
         eyeColor: Color3.fromHexString(userData.data?.avatar?.eyeColor || ""),
         skinColor: Color3.fromHexString(userData.data?.avatar?.skinColor || ""),
         hairColor: Color3.fromHexString(userData.data?.avatar?.hairColor || ""),
-       expressionTriggerId :  'animations/giant_emote.glb'
-      })
-
-
+        expressionTriggerId: 'animations/giant_emote.glb',
+        expressionTriggerTimestamp: 0           
+    })
     
     // Position the NPC on the boat
     Transform.createOrReplace(giantNPC, {
@@ -308,18 +307,27 @@ function createGiantNpc(userData: any) {
     })
     
   
-    const mutableAvatar = AvatarShape.getMutable(giantNPC!)
-    mutableAvatar.expressionTriggerId = 'animations/giant_emote.glb'
-    
-    // Set up the interval to keep triggering the emote
-    utils.timers.setInterval(() => {
-        if (giantNPC) {
-            const mutableAvatar = AvatarShape.getMutable(giantNPC)
-            mutableAvatar.expressionTriggerId = 'animations/giant_emote.glb'
-        }
-    }, 5000)
-  
+    const npc = AvatarShape.getMutable(giantNPC!);
+    npc.expressionTriggerTimestamp =  Date.now()
+    npc.expressionTriggerId = 'animations/giant_emote.glb'
 
+  
+    let emoteTimer = 0
+    const emoteDuration = 8 // seconds
+
+    engine.addSystem((dt: number) => {
+      emoteTimer += dt
+
+      if (emoteTimer >= emoteDuration) {
+        const npc = AvatarShape.getMutableOrNull(giantNPC!)
+        if (npc) {
+          npc.expressionTriggerId = 'animations/giant_emote.glb'
+          npc.expressionTriggerTimestamp = Date.now() // ensures trigger
+        }
+
+        emoteTimer = 0
+      }
+    })
 
     
 }
