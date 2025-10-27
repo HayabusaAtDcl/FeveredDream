@@ -16,7 +16,6 @@ export function setGameOver(){
     gameOver = true
 }
 // 🔥 Candle config
-const MAX_ACTIVE_CANDLES = 1
 const CANDLE_DURATION = 45  // seconds per candle
 
 // 🕯️ Candle data
@@ -81,12 +80,7 @@ export function createCandle(position: Vector3) {
       opts: { button: InputAction.IA_PRIMARY, hoverText: 'Light Candle' }
     },
     () => {
-      const activeCount = candles.filter(c => c.active).length
-      if (activeCount >= MAX_ACTIVE_CANDLES) {
-        console.log('🔥 You already have 3 candles lit!')
-        return
-      }
-
+      
       const state = candles.find(c => c.entity === candle)
       if (state && !state.active) {
         lightCandle(state)
