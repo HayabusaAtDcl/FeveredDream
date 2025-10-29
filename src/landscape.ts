@@ -1,5 +1,5 @@
-import { Vector3, Quaternion, Color3 } from '@dcl/sdk/math'
-import { AvatarModifierArea, AvatarModifierType, GltfContainer, LightSource, Transform, engine } from '@dcl/sdk/ecs'
+import { Vector3, Quaternion, Color3, Color4 } from '@dcl/sdk/math'
+import { AvatarModifierArea, AvatarModifierType, GltfContainer, LightSource, Material, MeshRenderer, Transform, engine } from '@dcl/sdk/ecs'
 
 // Global references for fog control
 export let darkness_sphere: any = null
@@ -9,14 +9,22 @@ export function addHideOtherAvatarArea(userData : any){
     const modifierArea = engine.addEntity()
     
     AvatarModifierArea.create(modifierArea, {
-        area: Vector3.create(32, 50, 32), 
+        area: Vector3.create(248, 50, 248), 
         modifiers: [AvatarModifierType.AMT_HIDE_AVATARS],
         excludeIds: [userData?.data?.userId || ""],
     })
 
     Transform.create(modifierArea, {
-        position: Vector3.create(-8, 0, -8)
+        position: Vector3.create(0, 0, 0),
+        scale: Vector3.create(248, 50, 248)
     })
+
+    /* MeshRenderer.setBox(modifierArea)
+    Material.setPbrMaterial(modifierArea, {
+            albedoColor: Color4.Black(), // Use Color4 for correct type with alpha
+            metallic: 0,
+            roughness: 1
+        }) */
 }
 
 export function addFog(){
@@ -46,7 +54,8 @@ export function addFog(){
         const deltaRotation = Quaternion.fromEulerDegrees(0, 30 * dt, 0) // 30° per sec
         transform.rotation = Quaternion.multiply(deltaRotation, transform.rotation)
 
-        Transform.getMutable(darkness_sphere).position = Transform.get(engine.PlayerEntity).position;
+        const playerPos = Transform.get(engine.PlayerEntity).position;
+        Transform.getMutable(darkness_sphere).position =  Vector3.create(playerPos.x, 0, playerPos.z)
     }
     engine.addSystem(fogRotationSystem)
 
