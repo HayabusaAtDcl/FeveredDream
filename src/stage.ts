@@ -7,7 +7,7 @@ import { AudioSource, ColliderLayer, engine, Entity, GltfContainer, InputModifie
 import { Vector3, Quaternion } from "@dcl/sdk/math";
 import { activateAngels, candleSystem, createCandle, forceLightCandle, gameOver, setGameOver } from "./candle";
 import { triggerSceneEmote } from "~system/RestrictedActions";
-import { foglight, setLight } from "./landscape";
+import { foglight, setFogPositionToPlayerY, setLight } from "./landscape";
 import { heart, wind } from "./utils";
 import { isGameStarted, fadeTransition } from "./ui";
 import * as utils from '@dcl-sdk/utils'
@@ -1174,6 +1174,8 @@ export function stageUpdateSystem(stage: Stage) {
 export let stageSystems: ((() => void) | ((dt: number) => void))[] = []
 
 export async function cleanupStage(stage: Stage) {
+    setFogPositionToPlayerY()
+    
     console.log("Cleaning up stage and all entities...")
      
     // 1. Remove all stage systems

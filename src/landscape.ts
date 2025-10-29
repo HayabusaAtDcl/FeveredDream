@@ -27,6 +27,12 @@ export function addHideOtherAvatarArea(userData : any){
         }) */
 }
 
+let setToPlayerY = false
+export function setFogPositionToPlayerY(){
+    setToPlayerY = true
+}
+
+
 export function addFog(){
     const darkness_range = 10.5;
     darkness_sphere = engine.addEntity()
@@ -45,6 +51,8 @@ export function addFog(){
 
     const rotationSpeed = 0.02 // radians per second
 
+    
+
     // system that runs every tick
     fogRotationSystem = (dt: number) => {
 
@@ -55,7 +63,7 @@ export function addFog(){
         transform.rotation = Quaternion.multiply(deltaRotation, transform.rotation)
 
         const playerPos = Transform.get(engine.PlayerEntity).position;
-        Transform.getMutable(darkness_sphere).position =  Vector3.create(playerPos.x, 0, playerPos.z)
+        Transform.getMutable(darkness_sphere).position =  Vector3.create(playerPos.x, setToPlayerY ? playerPos.y : 0, playerPos.z)
     }
     engine.addSystem(fogRotationSystem)
 
