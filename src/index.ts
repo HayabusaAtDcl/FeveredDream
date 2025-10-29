@@ -1,9 +1,8 @@
-import { engine, executeTask } from '@dcl/sdk/ecs'
+import { executeTask } from '@dcl/sdk/ecs'
 import { GameManager } from './core/GameManager'
-import { fadeTransition, setupUi } from './ui'
-import { addFog, setLight } from './landscape'
+import { setupUi } from './ui'
+import { addFog, addHideOtherAvatarArea, setLight } from './landscape'
 import { playRandomAmbienceLoop } from './ambience'
-import { createStage5Scene } from './stage5'
 import { getUserData, GetUserDataResponse } from '~system/UserIdentity'
 
 // Initialize game manager
@@ -15,12 +14,12 @@ export function main() {
   
   executeTask(async () => {
     userData = await getUserData({})
-
     
     console.log('Initializing Fever Dream experience...')
     
     try {
       // Initialize core systems
+      addHideOtherAvatarArea(userData)
       setupUi()
       setLight()
       addFog()

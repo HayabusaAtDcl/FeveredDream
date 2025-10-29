@@ -1,9 +1,23 @@
 import { Vector3, Quaternion, Color3 } from '@dcl/sdk/math'
-import { GltfContainer, LightSource, Transform, engine } from '@dcl/sdk/ecs'
+import { AvatarModifierArea, AvatarModifierType, GltfContainer, LightSource, Transform, engine } from '@dcl/sdk/ecs'
 
 // Global references for fog control
 export let darkness_sphere: any = null
 export let fogRotationSystem: any = null
+
+export function addHideOtherAvatarArea(userData : any){
+    const modifierArea = engine.addEntity()
+    
+    AvatarModifierArea.create(modifierArea, {
+        area: Vector3.create(32, 50, 32), 
+        modifiers: [AvatarModifierType.AMT_HIDE_AVATARS],
+        excludeIds: [userData?.data?.userId || ""],
+    })
+
+    Transform.create(modifierArea, {
+        position: Vector3.create(-8, 0, -8)
+    })
+}
 
 export function addFog(){
     const darkness_range = 10.5;
